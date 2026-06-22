@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePlatformStore, TeamMember, Challenge } from '@/store/usePlatformStore';
+import { usePlatformStore, TeamMember, Challenge, Team } from '@/store/usePlatformStore';
 import { 
   Users, BookOpen, FileBadge, Calendar, Compass, ShieldAlert, 
   Trash2, Mail, Link as LinkIcon, QrCode, CheckCircle2, ChevronRight, 
@@ -15,7 +15,7 @@ export function StudentPortal() {
     activeTab, team, challenges, toggleChallengeBookmark, 
     inviteMember, removeMember, submitProject, requestMentor,
     calendarEvents, notifications, user, updateUserProfile, selectedChallengeId, setSelectedChallengeId, setTab, allTeams,
-    countdownDate, phases, activePhaseIndex
+    countdownDate, phases, activePhaseIndex, addToast
   } = usePlatformStore();
 
   // Countdown to July 10, 2026 (Phase 2 Ends)
@@ -57,7 +57,9 @@ export function StudentPortal() {
   const [githubUrl, setGithubUrl] = useState('');
   const [demoUrl, setDemoUrl] = useState('');
   const [subDesc, setSubDesc] = useState('');
+  const [presentationFile, setPresentationFile] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [leaderboardTrack, setLeaderboardTrack] = useState('All');
 
   // Mentor Requests local state
   const [mentorReqType, setMentorReqType] = useState<'Technical' | 'Design' | 'Research' | 'Architecture' | 'Deployment' | 'General'>('Technical');
@@ -82,8 +84,8 @@ export function StudentPortal() {
   // Submission handler
   const handleSubmitProject = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!githubUrl || !demoUrl || !subDesc) return;
-    submitProject(githubUrl, demoUrl, subDesc, 'presentation.pdf');
+    if (!githubUrl || !demoUrl || !subDesc || !presentationFile) return;
+    submitProject(githubUrl, demoUrl, subDesc, presentationFile);
     setIsSubmitted(true);
     setTimeout(() => setIsSubmitted(false), 4000);
   };
@@ -611,9 +613,10 @@ export function StudentPortal() {
                       <p className="text-[10px] text-muted-foreground leading-relaxed font-sans">
                         Your submission has been cataloged. You can check the Judge tab once review cycles conclude.
                       </p>
-                      <div className="pt-2 border-t border-success/20 text-[10px] text-muted-foreground space-y-1">
+                      <div className="pt-2 border-t border-success/20 text-[10px] text-muted-foreground space-y-1 text-left">
                         <div className="truncate"><span className="font-bold text-foreground">Repo:</span> {team.submissions[0].githubUrl}</div>
                         <div className="truncate"><span className="font-bold text-foreground">Demo:</span> {team.submissions[0].demoUrl}</div>
+                        <div className="truncate"><span className="font-bold text-foreground">Deck:</span> {team.submissions[0].presentationFile}</div>
                       </div>
                     </div>
                   ) : (
@@ -624,15 +627,19 @@ export function StudentPortal() {
                         </div>
                       )}
                       <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">GitHub Repo *</label>
+                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1 text-left">GitHub Repo *</label>
                         <input value={githubUrl} onChange={e => setGithubUrl(e.target.value)} placeholder="https://github.com/..." className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Demo link *</label>
+                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1 text-left">Demo link *</label>
                         <input value={demoUrl} onChange={e => setDemoUrl(e.target.value)} placeholder="https://..." className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">System summary *</label>
+                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1 text-left">Presentation File Name *</label>
+                        <input value={presentationFile} onChange={e => setPresentationFile(e.target.value)} placeholder="team_deck.pdf" className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1 text-left">System summary *</label>
                         <textarea value={subDesc} onChange={e => setSubDesc(e.target.value)} rows={3} placeholder="Briefly describe what your algorithm does..." className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 resize-none" />
                       </div>
                       <button type="submit" className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider cursor-pointer shadow-md">
@@ -864,7 +871,7 @@ export function StudentPortal() {
                 </div>
 
                 <button
-                  onClick={() => alert(`Simulated Download PDF for ${cert.title}`)}
+                  onClick={() => addToast('Download Started', `Simulated PDF download initiated for ${cert.title}.`, 'success')}
                   className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border/30 hover:border-border text-foreground hover:bg-muted/15 font-bold text-xs uppercase tracking-wide cursor-pointer transition-all"
                 >
                   <Download className="w-4 h-4 text-primary" />
@@ -877,105 +884,183 @@ export function StudentPortal() {
       )}
 
       {/* C. TEAM LEADERBOARD */}
-      {activeTab === 'leaderboard' && (
-        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-          <div>
-            <span className="text-[10px] font-black uppercase text-primary tracking-widest">
-              Standings
-            </span>
-            <h2 className="text-xl font-black text-foreground mt-0.5">
-              Team Leaderboard
-            </h2>
-            <p className="text-[11px] text-muted-foreground mt-1 leading-normal font-sans">
-              Real-time standings based on evaluation grades, project milestones, and collaboration metrics.
-            </p>
-          </div>
+      {activeTab === 'leaderboard' && (() => {
+        const getVelocityValue = (t: Team) => {
+          if (!t.progressHistory || t.progressHistory.length < 2) return 0;
+          const latest = t.progressHistory[t.progressHistory.length - 1].progress;
+          const earliest = t.progressHistory[0].progress;
+          return Math.round(((latest - earliest) / t.progressHistory.length) * 10) / 10;
+        };
 
-          {/* Top 3 Podiums */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-            {/* Rank 2 */}
-            <div className="order-2 md:order-1 rounded-2xl border border-border/40 bg-card p-6 flex flex-col items-center justify-center text-center relative mt-6 md:mt-10">
-              <div className="absolute -top-6 w-12 h-12 rounded-full bg-slate-400/10 border border-slate-400/25 flex items-center justify-center text-slate-400 font-extrabold text-lg shadow-lg">
-                2
-              </div>
-              <Trophy className="w-8 h-8 text-slate-400 mb-3" />
-              <h3 className="text-sm font-bold text-foreground">
-                {[...allTeams].sort((a,b) => (b.submissions[0]?.score || 0) - (a.submissions[0]?.score || 0))[1]?.name || 'TBD'}
-              </h3>
-              <span className="text-[10px] text-muted-foreground mt-1">
-                {[...allTeams].sort((a,b) => (b.submissions[0]?.score || 0) - (a.submissions[0]?.score || 0))[1]?.track || 'Innovation Track'}
+        const getVelocityLabel = (t: Team) => {
+          const val = getVelocityValue(t);
+          if (val > 15) return '🔥 Fast';
+          if (val > 5) return '✅ Steady';
+          if (val > 0) return '⚠️ Stalled';
+          return '🔴 Stuck';
+        };
+
+        const sortedRankedTeams = [...allTeams].sort((a, b) => {
+          const aScore = a.submissions[0]?.score || 0;
+          const bScore = b.submissions[0]?.score || 0;
+          if (bScore !== aScore) return bScore - aScore;
+          return b.progress - a.progress;
+        });
+
+        const myTeamRank = team ? sortedRankedTeams.findIndex(t => t.id === team.id) + 1 : 0;
+        const myTeamScore = team?.submissions[0]?.score;
+
+        const filteredLeaderboardTeams = sortedRankedTeams.filter(t => 
+          leaderboardTrack === 'All' || t.track === leaderboardTrack
+        );
+
+        return (
+          <div className="p-4 sm:p-6 lg:p-8 space-y-6 text-left">
+            <div>
+              <span className="text-[10px] font-black uppercase text-primary tracking-widest">
+                Standings
               </span>
-              <div className="mt-4 text-lg font-black text-foreground">
-                {[...allTeams].sort((a,b) => (b.submissions[0]?.score || 0) - (a.submissions[0]?.score || 0))[1]?.submissions[0]?.score || 0}%
-              </div>
+              <h2 className="text-xl font-black text-foreground mt-0.5">
+                Team Leaderboard
+              </h2>
+              <p className="text-[11px] text-muted-foreground mt-1 leading-normal font-sans">
+                Real-time standings based on evaluation grades, project milestones, and collaboration metrics.
+              </p>
             </div>
 
-            {/* Rank 1 */}
-            <div className="order-1 rounded-2xl border border-primary/30 bg-primary/5 p-6 flex flex-col items-center justify-center text-center relative shadow-lg shadow-primary/5">
-              <div className="absolute -top-8 w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/35 flex items-center justify-center text-yellow-500 font-extrabold text-2xl shadow-xl">
-                1
+            {/* "My Team" Status Banner */}
+            {team && (
+              <div className="bg-primary/5 border border-primary/25 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm shadow-primary/5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-black uppercase text-primary tracking-wider bg-primary/10 px-2 py-0.5 rounded border border-primary/25">YOUR STANDING</span>
+                    <span className="text-xs text-muted-foreground font-bold">{team.name}</span>
+                  </div>
+                  <h3 className="text-lg font-black text-white mt-1.5 flex items-baseline gap-1">
+                    Rank #{myTeamRank} <span className="text-xs font-semibold text-muted-foreground font-mono">out of {allTeams.length}</span>
+                  </h3>
+                </div>
+                <div className="flex gap-6 items-center">
+                  <div className="text-right">
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase block">Progress</span>
+                    <span className="text-sm font-extrabold text-foreground">{team.progress}%</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase block">Collab score</span>
+                    <span className="text-sm font-extrabold text-foreground">{team.collaborationScore} pts</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase block">Grade</span>
+                    <span className="text-sm font-extrabold text-primary font-mono">{myTeamScore !== undefined ? `${myTeamScore}%` : 'TBD'}</span>
+                  </div>
+                </div>
               </div>
-              <Trophy className="w-10 h-10 text-yellow-500 mb-3 animate-bounce" style={{ animationDuration: '3s' }} />
-              <h3 className="text-base font-extrabold text-foreground">
-                {[...allTeams].sort((a,b) => (b.submissions[0]?.score || 0) - (a.submissions[0]?.score || 0))[0]?.name || 'TBD'}
-              </h3>
-              <span className="text-xs text-muted-foreground mt-1">
-                {[...allTeams].sort((a,b) => (b.submissions[0]?.score || 0) - (a.submissions[0]?.score || 0))[0]?.track || 'Innovation Track'}
-              </span>
-              <div className="mt-4 text-2xl font-black text-primary">
-                {[...allTeams].sort((a,b) => (b.submissions[0]?.score || 0) - (a.submissions[0]?.score || 0))[0]?.submissions[0]?.score || 0}%
-              </div>
+            )}
+
+            {/* Track Filter Pills */}
+            <div className="flex gap-1.5 overflow-x-auto select-none custom-scrollbar pb-1">
+              {['All', 'Energy Systems', 'Robotics', 'Sustainability', 'E-Operations', 'AI', 'IoT'].map(track => (
+                <button
+                  key={track}
+                  onClick={() => setLeaderboardTrack(track)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${
+                    leaderboardTrack === track 
+                      ? 'bg-primary text-white border-primary shadow-sm' 
+                      : 'bg-[#121212] text-muted-foreground border-border/15 hover:text-foreground hover:bg-[#181818]'
+                  }`}
+                >
+                  {track}
+                </button>
+              ))}
             </div>
 
-            {/* Rank 3 */}
-            <div className="order-3 rounded-2xl border border-border/40 bg-card p-6 flex flex-col items-center justify-center text-center relative mt-6 md:mt-10">
-              <div className="absolute -top-6 w-12 h-12 rounded-full bg-amber-600/10 border border-amber-600/25 flex items-center justify-center text-amber-700 font-extrabold text-lg shadow-lg">
-                3
-              </div>
-              <Trophy className="w-8 h-8 text-amber-700 mb-3" />
-              <h3 className="text-sm font-bold text-foreground">
-                {[...allTeams].sort((a,b) => (b.submissions[0]?.score || 0) - (a.submissions[0]?.score || 0))[2]?.name || 'TBD'}
-              </h3>
-              <span className="text-[10px] text-muted-foreground mt-1">
-                {[...allTeams].sort((a,b) => (b.submissions[0]?.score || 0) - (a.submissions[0]?.score || 0))[2]?.track || 'Innovation Track'}
-              </span>
-              <div className="mt-4 text-lg font-black text-foreground">
-                {[...allTeams].sort((a,b) => (b.submissions[0]?.score || 0) - (a.submissions[0]?.score || 0))[2]?.submissions[0]?.score || 0}%
-              </div>
-            </div>
-          </div>
+            {/* Top Podiums Grid */}
+            {leaderboardTrack === 'All' && filteredLeaderboardTeams.length >= 3 && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+                {/* Rank 2 */}
+                <div className="order-2 md:order-1 rounded-2xl border border-border/40 bg-card p-6 flex flex-col items-center justify-center text-center relative mt-6 md:mt-10">
+                  <div className="absolute -top-6 w-12 h-12 rounded-full bg-slate-400/10 border border-slate-400/25 flex items-center justify-center text-slate-400 font-extrabold text-lg shadow-lg">
+                    2
+                  </div>
+                  <Trophy className="w-8 h-8 text-slate-400 mb-3" />
+                  <h3 className="text-sm font-bold text-foreground">
+                    {filteredLeaderboardTeams[1]?.name || 'TBD'}
+                  </h3>
+                  <span className="text-[10px] text-muted-foreground mt-1">
+                    {filteredLeaderboardTeams[1]?.track || 'Innovation Track'}
+                  </span>
+                  <div className="mt-4 text-lg font-black text-foreground">
+                    {filteredLeaderboardTeams[1]?.submissions[0]?.score ? `${filteredLeaderboardTeams[1].submissions[0].score}%` : 'TBD'}
+                  </div>
+                </div>
 
-          {/* Full List Roster Table */}
-          <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4">
-            <h3 className="text-sm font-extrabold text-foreground">Leaderboard Standings</h3>
+                {/* Rank 1 */}
+                <div className="order-1 rounded-2xl border border-primary/30 bg-primary/5 p-6 flex flex-col items-center justify-center text-center relative shadow-lg shadow-primary/5">
+                  <div className="absolute -top-8 w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/35 flex items-center justify-center text-yellow-500 font-extrabold text-2xl shadow-xl">
+                    1
+                  </div>
+                  <Trophy className="w-10 h-10 text-yellow-500 mb-3 animate-bounce" style={{ animationDuration: '3s' }} />
+                  <h3 className="text-base font-extrabold text-foreground">
+                    {filteredLeaderboardTeams[0]?.name || 'TBD'}
+                  </h3>
+                  <span className="text-xs text-muted-foreground mt-1">
+                    {filteredLeaderboardTeams[0]?.track || 'Innovation Track'}
+                  </span>
+                  <div className="mt-4 text-2xl font-black text-primary">
+                    {filteredLeaderboardTeams[0]?.submissions[0]?.score ? `${filteredLeaderboardTeams[0].submissions[0].score}%` : 'TBD'}
+                  </div>
+                </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    <th className="pb-3 text-center w-12">Rank</th>
-                    <th className="pb-3 px-4">Team</th>
-                    <th className="pb-3 px-4">Track</th>
-                    <th className="pb-3 px-4 text-center">Members</th>
-                    <th className="pb-3 px-4">Progress</th>
-                    <th className="pb-3 px-4 text-center">Collab Score</th>
-                    <th className="pb-3 px-4 text-right">Grade</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/15">
-                  {[...allTeams]
-                    .sort((a, b) => {
-                      const aScore = a.submissions[0]?.score || 0;
-                      const bScore = b.submissions[0]?.score || 0;
-                      if (bScore !== aScore) return bScore - aScore;
-                      return b.progress - a.progress;
-                    })
-                    .map((t, idx) => {
+                {/* Rank 3 */}
+                <div className="order-3 rounded-2xl border border-border/40 bg-card p-6 flex flex-col items-center justify-center text-center relative mt-6 md:mt-10">
+                  <div className="absolute -top-6 w-12 h-12 rounded-full bg-amber-600/10 border border-amber-600/25 flex items-center justify-center text-amber-700 font-extrabold text-lg shadow-lg">
+                    3
+                  </div>
+                  <Trophy className="w-8 h-8 text-amber-700 mb-3" />
+                  <h3 className="text-sm font-bold text-foreground">
+                    {filteredLeaderboardTeams[2]?.name || 'TBD'}
+                  </h3>
+                  <span className="text-[10px] text-muted-foreground mt-1">
+                    {filteredLeaderboardTeams[2]?.track || 'Innovation Track'}
+                  </span>
+                  <div className="mt-4 text-lg font-black text-foreground">
+                    {filteredLeaderboardTeams[2]?.submissions[0]?.score ? `${filteredLeaderboardTeams[2].submissions[0].score}%` : 'TBD'}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Standings Table */}
+            <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4">
+              <h3 className="text-sm font-extrabold text-foreground">Standings List</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      <th className="pb-3 text-center w-12">Rank</th>
+                      <th className="pb-3 text-center w-12">Trend</th>
+                      <th className="pb-3 px-4">Team</th>
+                      <th className="pb-3 px-4">College Hub</th>
+                      <th className="pb-3 px-4">Track</th>
+                      <th className="pb-3 px-4 text-center">Members</th>
+                      <th className="pb-3 px-4">Progress</th>
+                      <th className="pb-3 px-4 text-center">Velocity</th>
+                      <th className="pb-3 px-4 text-center">Collab Score</th>
+                      <th className="pb-3 px-4 text-right">Grade</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/15">
+                    {filteredLeaderboardTeams.map((t, idx) => {
                       const score = t.submissions[0]?.score;
                       const isGraded = t.submissions[0]?.status === 'reviewed' || score !== undefined;
+                      const velocity = getVelocityValue(t);
+                      
+                      // Simulated trend index
+                      const isTrendingUp = velocity > 5;
+                      const isTrendingDown = velocity === 0;
 
                       return (
-                        <tr key={t.id} className="text-xs font-semibold text-muted-foreground hover:bg-muted/5 transition-colors">
+                        <tr key={t.id} className={`text-xs font-semibold text-muted-foreground hover:bg-muted/5 transition-colors ${t.id === team?.id ? 'bg-primary/5 text-foreground' : ''}`}>
                           <td className="py-4 text-center">
                             <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full font-bold ${
                               idx === 0 
@@ -989,12 +1074,22 @@ export function StudentPortal() {
                               {idx + 1}
                             </span>
                           </td>
+                          <td className="py-4 text-center">
+                            {isTrendingUp ? (
+                              <span className="text-emerald-500 font-bold" title="Trending Up">↑</span>
+                            ) : isTrendingDown ? (
+                              <span className="text-rose-500 font-bold" title="Stalled/Trending Down">↓</span>
+                            ) : (
+                              <span className="text-muted-foreground/45 font-bold" title="Steady">→</span>
+                            )}
+                          </td>
                           <td className="py-4 px-4 text-foreground font-bold">
                             {t.name}
                             {t.id === team?.id && (
                               <span className="ml-2 px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-[8px] font-bold uppercase tracking-wider">Your Team</span>
                             )}
                           </td>
+                          <td className="py-4 px-4 truncate max-w-[150px]">{t.college}</td>
                           <td className="py-4 px-4 uppercase text-[10px] tracking-wider">{t.track}</td>
                           <td className="py-4 px-4 text-center font-mono">{t.members.length}</td>
                           <td className="py-4 px-4">
@@ -1005,23 +1100,32 @@ export function StudentPortal() {
                               <span className="text-[10px] font-mono">{t.progress}%</span>
                             </div>
                           </td>
+                          <td className="py-4 px-4 text-center font-medium">
+                            {getVelocityLabel(t)}
+                          </td>
                           <td className="py-4 px-4 text-center font-mono text-foreground">{t.collaborationScore} pts</td>
                           <td className="py-4 px-4 text-right font-mono font-bold text-foreground">
                             {isGraded ? (
                               <span className="text-primary">{score}%</span>
                             ) : (
-                              <span className="text-muted-foreground/40 text-[10px] uppercase font-semibold">TBD</span>
+                              <span className="text-muted-foreground/45 text-[10px] uppercase font-semibold">TBD</span>
                             )}
                           </td>
                         </tr>
                       );
                     })}
-                </tbody>
-              </table>
+                    {filteredLeaderboardTeams.length === 0 && (
+                      <tr>
+                        <td colSpan={10} className="text-center py-8 text-muted-foreground/50">No teams enrolled in this track yet.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* D. HELP DESK */}
       {activeTab === 'help-desk' && (
@@ -1166,7 +1270,7 @@ export function StudentPortal() {
                 <button
                   onClick={() => {
                     updateUserProfile({ firstName, lastName, fullName: `${firstName} ${lastName}` });
-                    alert('Profile updated!');
+                    addToast('Profile Updated', 'Your profile settings have been updated successfully.', 'success');
                   }}
                   className="py-2.5 px-6 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider cursor-pointer transition-all shadow-md shadow-primary/10"
                 >

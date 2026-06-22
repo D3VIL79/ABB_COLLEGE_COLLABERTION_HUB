@@ -10,6 +10,7 @@ import { LandingView } from '@/components/views/LandingView';
 import { OnboardingView } from '@/components/views/OnboardingView';
 import { PortalView } from '@/components/views/PortalView';
 import { MouseGlow } from '@/components/shared/MouseGlow';
+import { ToastContainer } from '@/components/shared/ToastContainer';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
@@ -62,6 +63,9 @@ export default function Home() {
       
       {/* Interactive mouse glow */}
       <MouseGlow />
+
+      {/* Global Toast Notifications Container */}
+      <ToastContainer />
 
       {/* Search Spotlights Palette */}
       <CommandPalette isOpen={isCommandOpen} onClose={() => setIsCommandOpen(false)} />

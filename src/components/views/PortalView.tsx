@@ -25,10 +25,6 @@ export function PortalView() {
       return <DigitalTwinView />;
     }
 
-    if (activeTab === 'analytics') {
-      return <AnalyticsView />;
-    }
-
     // Render specific portal workspaces based on user role context
     switch (role) {
       case 'student':

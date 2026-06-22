@@ -1,20 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { usePlatformStore, MentorRequest } from '@/store/usePlatformStore';
 import { 
   Users, MessageSquareCode, Calendar, CheckCircle2, ChevronRight, 
-  Trash2, PhoneCall, Video, VideoOff, Mic, MicOff, Send, HelpCircle, Code, ShieldCheck
+  Trash2, PhoneCall, Video, VideoOff, Mic, MicOff, Send, HelpCircle, Code, ShieldCheck,
+  TrendingUp, Award, Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, 
+  XAxis, YAxis, CartesianGrid, Tooltip 
+} from 'recharts';
 
 export function MentorPortal() {
   const { 
     activeTab, mentorRequests, assignMentor, resolveMentorRequest, 
-    addCalendarEvent, mentors 
+    addCalendarEvent, mentors, user, updateUserProfile, addToast 
   } = usePlatformStore();
 
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+
+  // Mentor profile & settings states
+  const [firstName, setFirstName] = useState(user.firstName || 'Elena');
+  const [lastName, setLastName] = useState(user.lastName || 'Rostova');
+  const [email, setEmail] = useState(user.email || 'elena.rostova@abb.com');
+  const [bio, setBio] = useState('Senior R&D Engineer at ABB Energy Systems. Specializes in microgrid simulations, smart distribution systems, and battery storage integration.');
+  const [mentorStatus, setMentorStatus] = useState<'available' | 'busy'>('available');
+
+  // Notification and alert preferences states
+  const [emailAlerts, setEmailAlerts] = useState(true);
+  const [pushAlerts, setPushAlerts] = useState(true);
+  const [audioAlerts, setAudioAlerts] = useState(true);
+  const [teamsIntegration, setTeamsIntegration] = useState(false);
   
   // Call session states
   const [sessionActive, setSessionActive] = useState(false);
@@ -381,6 +399,402 @@ function balanceGridLoad(demandCurve, batteryCurves) {
                 Schedule Session
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* C. MENTOR ANALYTICS / MY IMPACT */}
+      {activeTab === 'analytics' && (() => {
+        const myRequests = mentorRequests.filter(r => r.mentorName === 'Elena Rostova');
+        const myResolvedCount = myRequests.filter(r => r.status === 'resolved').length;
+        const myActiveCount = myRequests.filter(r => r.status === 'assigned').length;
+
+        // Mocked progress delta of helped teams
+        const helpedTeamsData = [
+          { name: 'CyberPulse', track: 'Energy Systems', before: 45, after: 65, delta: 20 },
+          { name: 'RoboKnights', track: 'Robotics', before: 60, after: 80, delta: 20 }
+        ];
+
+        const requestTypeData = [
+          { name: 'Technical', value: myRequests.filter(r => r.type === 'Technical').length || 2, fill: '#ff000f' },
+          { name: 'Architecture', value: myRequests.filter(r => r.type === 'Architecture').length || 1, fill: '#3b82f6' },
+          { name: 'Deployment', value: myRequests.filter(r => r.type === 'Deployment').length || 1, fill: '#10b981' },
+          { name: 'Design', value: myRequests.filter(r => r.type === 'Design').length || 1, fill: '#f59e0b' }
+        ];
+
+        const priorityData = [
+          { name: 'Low', count: myRequests.filter(r => r.priority === 'Low').length || 1, fill: '#64748b' },
+          { name: 'Medium', count: myRequests.filter(r => r.priority === 'Medium').length || 2, fill: '#3b82f6' },
+          { name: 'High', count: myRequests.filter(r => r.priority === 'High').length || 1, fill: '#f59e0b' },
+          { name: 'Urgent', count: myRequests.filter(r => r.priority === 'Urgent').length || 1, fill: '#ff000f' }
+        ];
+
+        return (
+          <div className="p-4 sm:p-6 lg:p-8 space-y-6 text-left">
+            <div>
+              <span className="text-[10px] font-black uppercase text-primary tracking-widest">
+                Analytics
+              </span>
+              <h2 className="text-xl font-black text-foreground mt-0.5">
+                My Mentor Impact
+              </h2>
+              <p className="text-[11px] text-muted-foreground mt-1 leading-normal font-sans">
+                Review your session statistics, request distributions, and progress velocity deltas of teams helped.
+              </p>
+            </div>
+
+            {/* KPIs */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-[#111111] border border-border/10 p-5 rounded-2xl">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase block">Resolved Tickets</span>
+                <span className="text-2xl font-black text-foreground mt-1.5 block font-mono">{myResolvedCount} Resolved</span>
+                <span className="text-[10px] text-muted-foreground/60 block mt-0.5">Support requests successfully closed</span>
+              </div>
+              <div className="bg-[#111111] border border-border/10 p-5 rounded-2xl">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase block">Active Assignments</span>
+                <span className="text-2xl font-black text-primary mt-1.5 block font-mono">{myActiveCount} Active</span>
+                <span className="text-[10px] text-muted-foreground/60 block mt-0.5">Currently assigned calls</span>
+              </div>
+              <div className="bg-[#111111] border border-border/10 p-5 rounded-2xl">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase block">Average Help Velocity</span>
+                <span className="text-2xl font-black text-emerald-500 mt-1.5 block font-mono">+20% Progress</span>
+                <span className="text-[10px] text-muted-foreground/60 block mt-0.5">Average team progress gain post-session</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Panel: Teams helped list */}
+              <div className="bg-[#111] border border-border/10 p-5 rounded-2xl space-y-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide border-b border-border/5 pb-2">
+                  Helped Teams Progress Deltas
+                </h3>
+
+                <div className="space-y-3">
+                  {helpedTeamsData.map((team, idx) => (
+                    <div key={idx} className="bg-[#151515] p-4 rounded-xl border border-border/5 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-bold text-foreground">{team.name}</div>
+                          <span className="text-[9px] text-muted-foreground/60 uppercase font-bold">{team.track}</span>
+                        </div>
+                        <span className="text-xs font-bold text-emerald-500">+{team.delta}% Gain</span>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] text-muted-foreground font-semibold">
+                          <span>Before session: {team.before}%</span>
+                          <span>Now: {team.after}%</span>
+                        </div>
+                        <div className="w-full bg-[#202020] h-1.5 rounded-full overflow-hidden flex items-center">
+                          <div className="h-1.5 bg-emerald-500 rounded-full" style={{ width: `${team.after}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Panel: Charts */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Pie Chart: Request Types */}
+                <div className="bg-[#111111] border border-border/10 p-5 rounded-2xl flex flex-col justify-between">
+                  <h4 className="text-xs font-bold text-muted-foreground uppercase">Request Categories</h4>
+                  
+                  <div className="h-[150px] w-full mt-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={requestTypeData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={60}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {requestTypeData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={({ active, payload }: any) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-[#181818] border border-border/25 p-1.5 rounded text-[10px] font-bold text-foreground">
+                                {payload[0].name}: {payload[0].value}
+                              </div>
+                            );
+                          }
+                          return null;
+                        }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-center text-[9px] font-bold mt-2">
+                    {requestTypeData.map((entry, idx) => (
+                      <span key={idx} style={{ color: entry.fill }}>● {entry.name}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bar Chart: Priority levels */}
+                <div className="bg-[#111111] border border-border/10 p-5 rounded-2xl flex flex-col justify-between">
+                  <h4 className="text-xs font-bold text-muted-foreground uppercase">Severity Counts</h4>
+
+                  <div className="h-[150px] w-full mt-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={priorityData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                        <XAxis dataKey="name" stroke="#666" fontSize={8} />
+                        <YAxis stroke="#666" fontSize={8} allowDecimals={false} />
+                        <Tooltip content={({ active, payload }: any) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-[#181818] border border-border/25 p-1.5 rounded text-[10px] font-bold text-foreground">
+                                Count: {payload[0].value}
+                              </div>
+                            );
+                          }
+                          return null;
+                        }} />
+                        <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+                          {priorityData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* D. MENTOR PROFILE & SETTINGS */}
+      {activeTab === 'profile' && (
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6 text-left">
+          <div>
+            <span className="text-[10px] font-black uppercase text-primary tracking-widest">
+              Configuration
+            </span>
+            <h2 className="text-xl font-black text-foreground mt-0.5">
+              Mentor Settings & Preferences
+            </h2>
+            <p className="text-[11px] text-muted-foreground mt-1 leading-normal font-sans">
+              Personalize expert profile cards, manage real-time assistance status, and configure support alerts.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column: Personal info */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Profile Card */}
+              <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 shadow-sm">
+                <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+                  <Users className="w-4 h-4 text-primary" />
+                  Mentor Profile Details
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">First Name *</label>
+                    <input 
+                      value={firstName} 
+                      onChange={e => setFirstName(e.target.value)} 
+                      className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Last Name *</label>
+                    <input 
+                      value={lastName} 
+                      onChange={e => setLastName(e.target.value)} 
+                      className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Corporate Email Address *</label>
+                    <input 
+                      value={email} 
+                      onChange={e => setEmail(e.target.value)} 
+                      className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Corporate Affiliation / Department *</label>
+                    <input 
+                      disabled
+                      value="ABB Energy Systems Division" 
+                      className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-muted text-muted-foreground outline-none cursor-not-allowed" 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Expert Profile Bio</label>
+                  <textarea 
+                    value={bio} 
+                    onChange={e => setBio(e.target.value)} 
+                    rows={4}
+                    className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 resize-none leading-relaxed" 
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      if (!firstName || !lastName || !email) {
+                        addToast('Required Fields Missing', 'Please fill out all mandatory mentor profile fields.', 'error');
+                        return;
+                      }
+                      updateUserProfile({ firstName, lastName, fullName: `${firstName} ${lastName}`, email });
+                      addToast('Mentor Profile Saved', 'Successfully saved expert biography and credentials.', 'success');
+                    }}
+                    className="py-2.5 px-6 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider cursor-pointer transition-all shadow-md shadow-primary/10"
+                  >
+                    Save Biography
+                  </button>
+                </div>
+              </div>
+
+              {/* Alert System Config */}
+              <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 shadow-sm">
+                <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+                  <MessageSquareCode className="w-4 h-4 text-primary" />
+                  Assistance Alerts Dispatcher
+                </h3>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-bold text-foreground">Email Dispatch Alert</div>
+                      <div className="text-[10px] text-muted-foreground leading-normal">Deliver copy of student code issues directly to your outlook inbox.</div>
+                    </div>
+                    <input 
+                      type="checkbox" 
+                      checked={emailAlerts}
+                      onChange={e => setEmailAlerts(e.target.checked)}
+                      className="accent-primary w-4.5 h-4.5"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-border/10 pt-4">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-bold text-foreground">Browser Push Alerts (Sonner)</div>
+                      <div className="text-[10px] text-muted-foreground leading-normal">Pop live desktop alert cards instantly when a team requests assistance.</div>
+                    </div>
+                    <input 
+                      type="checkbox" 
+                      checked={pushAlerts}
+                      onChange={e => setPushAlerts(e.target.checked)}
+                      className="accent-primary w-4.5 h-4.5"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-border/10 pt-4">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-bold text-foreground">Audio Bell Sound Warnings</div>
+                      <div className="text-[10px] text-muted-foreground leading-normal">Play an acoustic ringtone sound alert for URGENT/HIGH queue tickets.</div>
+                    </div>
+                    <input 
+                      type="checkbox" 
+                      checked={audioAlerts}
+                      onChange={e => setAudioAlerts(e.target.checked)}
+                      className="accent-primary w-4.5 h-4.5"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-border/10 pt-4">
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-bold text-foreground">ABB MS-Teams Integration</div>
+                      <div className="text-[10px] text-muted-foreground leading-normal">Mirror tickets and code snippets directly inside your ABB teams workspace.</div>
+                    </div>
+                    <input 
+                      type="checkbox" 
+                      checked={teamsIntegration}
+                      onChange={e => setTeamsIntegration(e.target.checked)}
+                      className="accent-primary w-4.5 h-4.5"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Status control */}
+            <div className="space-y-6">
+              <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
+
+                <div>
+                  <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-primary" />
+                    Availability Status
+                  </h3>
+                  <p className="text-[10px] text-muted-foreground leading-normal mt-1">
+                    Control whether student teams can assign you pending support tickets.
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  <div className="flex gap-2 p-1 bg-[#151515] border border-border/10 rounded-xl">
+                    <button
+                      onClick={() => {
+                        setMentorStatus('available');
+                        addToast('Status Available', 'You are now online and visible to students seeking assistance.', 'success');
+                      }}
+                      className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        mentorStatus === 'available' 
+                          ? 'bg-success text-white font-extrabold shadow shadow-success/15' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      ● Online (Ready)
+                    </button>
+                    <button
+                      onClick={() => {
+                        setMentorStatus('busy');
+                        addToast('Status Offline', 'You are now set to busy. No further automated tickets will be dispatched.', 'info');
+                      }}
+                      className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        mentorStatus === 'busy' 
+                          ? 'bg-warning text-black font-extrabold' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      ● Offline (Busy)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-[10px] text-muted-foreground leading-relaxed font-sans bg-muted/10 p-3 rounded-xl border border-border/15 mt-3">
+                  {mentorStatus === 'available' ? (
+                    <span className="text-success font-semibold">Active Mode: You will receive real-time sound notifications and desktop alerts for incoming requests.</span>
+                  ) : (
+                    <span className="text-warning font-semibold">Quiet Mode: Support queue calls will accumulate but you will not receive live sounds or screen flashes.</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Specialization Domain tags */}
+              <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 shadow-sm">
+                <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+                  <Award className="w-4 h-4 text-primary" />
+                  Focus Sub-Tracks
+                </h3>
+                
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {['Energy Systems', 'Power Electronics', 'Load Balancers', 'Smart Grid Analytics', 'Battery Microgrids', 'ROS Navigation'].map((tag, idx) => (
+                    <span key={idx} className="text-[9px] font-bold px-2 py-1 rounded bg-[#202020] text-muted-foreground border border-border/20 uppercase tracking-wide">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

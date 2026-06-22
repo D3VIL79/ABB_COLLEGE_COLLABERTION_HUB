@@ -10,7 +10,7 @@ import {
 import { motion } from 'framer-motion';
 
 export function Sidebar() {
-  const { role, activeTab, setTab, team, notifications, mentorRequests } = usePlatformStore();
+  const { role, activeTab, setTab, team, notifications, mentorRequests, allTeams } = usePlatformStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   if (role === 'guest') return null;
@@ -27,8 +27,10 @@ export function Sidebar() {
       { id: 'profile', label: 'Settings', icon: Settings },
     ],
     staff: [
-      { id: 'dashboard', label: 'Teams Dashboard', icon: Home },
-      { id: 'requests', label: 'Support Requests', icon: MessageSquareCode, badge: mentorRequests.filter(r => r.status === 'pending').length },
+      { id: 'teams', label: 'Team Roster', icon: Users },
+      { id: 'submissions', label: 'Submissions', icon: ClipboardCheck, badge: allTeams.flatMap(t => t.submissions).length },
+      { id: 'requests', label: 'Support Queue', icon: MessageSquareCode, badge: mentorRequests.filter(r => r.status === 'pending').length },
+      { id: 'manage-events', label: 'Challenge Config', icon: Trophy },
       { id: 'profile', label: 'Settings', icon: Settings },
     ],
     admin: [
@@ -46,6 +48,7 @@ export function Sidebar() {
     mentor: [
       { id: 'dashboard', label: 'Mentor Hub', icon: Home },
       { id: 'mentor', label: 'Help Requests', icon: MessageSquareCode, badge: mentorRequests.filter(r => r.status === 'pending').length },
+      { id: 'analytics', label: 'My Impact', icon: BarChart3 },
       { id: 'twin', label: 'Venue Map', icon: MapPin },
       { id: 'profile', label: 'Settings', icon: Settings },
     ]
@@ -57,7 +60,7 @@ export function Sidebar() {
     <motion.div
       animate={{ width: isCollapsed ? 64 : 240 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className="relative flex flex-col h-screen border-r border-white/5 bg-black shrink-0 z-40 select-none"
+      className="relative hidden md:flex flex-col h-screen border-r border-white/5 bg-black shrink-0 z-40 select-none"
     >
       {/* Sidebar Header / Logo (doubled size, w-20 h-20) */}
       <div className={`p-4 border-b border-white/5 flex items-center justify-center ${isCollapsed ? 'py-6' : 'py-5'}`}>

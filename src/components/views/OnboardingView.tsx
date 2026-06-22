@@ -198,10 +198,10 @@ export function OnboardingView() {
   return (
     <div className="flex-1 w-full min-h-[calc(100vh-64px)] flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-background relative overflow-y-auto font-satoshi">
       {/* Absolute Ambient Background Lights */}
-      <div className="absolute top-1/4 left-1/4 w-[250px] h-[250px] rounded-full bg-primary/5 blur-[80px]" />
-      <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] rounded-full bg-blue-500/5 blur-[80px]" />
+      <div className="absolute top-1/4 left-1/4 w-[250px] h-[250px] rounded-full bg-primary/5 blur-[100px]" />
+      <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] rounded-full bg-primary/5 blur-[100px]" />
 
-      <div className="relative z-10 w-full max-w-lg rounded-2xl glass-panel p-6 sm:p-8 shadow-2xl border border-border/40 backdrop-blur-xl">
+      <div className="relative z-10 w-full max-w-lg rounded-[21px] bg-[#0d0d0d] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-border/30 backdrop-blur-sm">
         <AnimatePresence mode="wait">
           {/* A. LOGIN PAGE */}
           {authStep === 'login' && (

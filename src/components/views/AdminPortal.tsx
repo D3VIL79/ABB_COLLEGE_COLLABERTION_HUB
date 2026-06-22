@@ -9,7 +9,8 @@ import {
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AnalyticsView } from './AnalyticsView';
+import { AdminAnalyticsDashboard } from './AdminAnalyticsDashboard';
+import { FacultyPortal } from './FacultyPortal';
 
 export function AdminPortal() {
   const { 
@@ -17,10 +18,11 @@ export function AdminPortal() {
     notifications, calendarEvents, challenges, addChallenge, deleteChallenge,
     mentorRequests, assignMentor, resolveMentorRequest, mentors, setTab,
     countdownDate, phases, activePhaseIndex, setCountdownDate, setActivePhaseIndex, addPhase, updatePhase, deletePhase,
-    updateChallengeProblemStatements
+    updateChallengeProblemStatements, addToast
   } = usePlatformStore();
 
   const [selectedTrackForPs, setSelectedTrackForPs] = useState<string | null>(null);
+  const [trackToDelete, setTrackToDelete] = useState<Challenge | null>(null);
 
   const handleUpdatePsField = (challengeId: string, psId: string, field: string, value: any) => {
     const ch = challenges.find(c => c.id === challengeId);
@@ -146,7 +148,7 @@ export function AdminPortal() {
   const handleCreateChallenge = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle || !newDescription || !newBackground) {
-      alert('Please fill out Title, Description, and Background fields.');
+      addToast('Required Fields Missing', 'Please fill out Title, Description, and Background fields.', 'error');
       return;
     }
 
@@ -194,7 +196,7 @@ export function AdminPortal() {
   const handleAssignMentorSubmit = (ticketId: string) => {
     const selectedMentor = assigneeMentorMap[ticketId];
     if (!selectedMentor) {
-      alert('Please select a mentor first.');
+      addToast('No Mentor Selected', 'Please select a mentor first before assigning.', 'error');
       return;
     }
     assignMentor(ticketId, selectedMentor);
@@ -642,11 +644,7 @@ export function AdminPortal() {
                                   {isExpanded ? 'Hide PS' : `Manage PS (${pStatements.length})`}
                                 </button>
                                 <button 
-                                  onClick={() => {
-                                    if (confirm(`Are you sure you want to delete track: "${ch.title}"?`)) {
-                                      deleteChallenge(ch.id);
-                                    }
-                                  }}
+                                  onClick={() => setTrackToDelete(ch)}
                                   className="p-1 rounded bg-muted/60 text-muted-foreground hover:text-red-400 border border-border/30 hover:border-red-400/20 cursor-pointer"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -787,8 +785,8 @@ export function AdminPortal() {
 
           {/* C. PERFORMANCE ANALYTICS */}
           {activeTab === 'analytics' && (
-            <div className="relative h-full flex flex-col">
-              <AnalyticsView />
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+              <AdminAnalyticsDashboard />
             </div>
           )}
         </>
@@ -798,184 +796,7 @@ export function AdminPortal() {
       {/* II. FACULTY WORKFLOWS                      */}
       {/* ========================================== */}
       {!isAdmin && (
-        <>
-          {/* A. FACULTY TEAMS DASHBOARD (Approvals Board) */}
-          {activeTab === 'dashboard' && (
-            <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-              <div>
-                <span className="text-[10px] font-black uppercase text-primary tracking-widest">
-                  Teams Console
-                </span>
-                <h2 className="text-xl font-black text-foreground mt-0.5">
-                  Faculty Collaboration Board
-                </h2>
-                <p className="text-[11px] text-muted-foreground mt-1 leading-normal font-sans">
-                  Review student team rosters, verify documentation, and approve submissions.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4">
-                <h3 className="text-sm font-extrabold text-foreground">Registered Teams</h3>
-                
-                <div className="divide-y divide-border/25">
-                  {allTeams.map((team) => (
-                    <div key={team.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div>
-                        <h4 className="text-xs font-black text-foreground flex items-center gap-2">
-                          {team.name}
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border/20 uppercase">
-                            {team.track}
-                          </span>
-                        </h4>
-                        <div className="text-[10px] text-muted-foreground mt-1 font-mono leading-none">Code: {team.code}</div>
-                        
-                        <div className="flex items-center gap-4 mt-3">
-                          <div className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
-                            <Users className="w-3.5 h-3.5" /> Members: {team.members.length}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
-                            <ShieldCheck className="w-3.5 h-3.5" /> Progress: {team.progress}%
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => alert(`Simulated document verification for team ${team.name}`)}
-                          className="px-4 py-2 rounded-lg border border-border/30 hover:border-border text-foreground hover:bg-muted/15 font-bold text-xs uppercase transition-all cursor-pointer"
-                        >
-                          Verify ID Documents
-                        </button>
-                        <button
-                          onClick={() => alert(`Roster for team ${team.name} approved!`)}
-                          className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-primary/10"
-                        >
-                          Approve Roster
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* B. FACULTY REQUESTS QUEUE */}
-          {activeTab === 'requests' && (
-            <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-              <div>
-                <span className="text-[10px] font-black uppercase text-primary tracking-widest">
-                  Support
-                </span>
-                <h2 className="text-xl font-black text-foreground mt-0.5">
-                  Student & Mentor Requests Queue
-                </h2>
-                <p className="text-[11px] text-muted-foreground mt-1 leading-normal font-sans">
-                  Monitor active assistance tickets generated by teams and assign experts to resolve blocks.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4">
-                <h3 className="text-sm font-extrabold text-foreground">Support Tickets Log</h3>
-
-                <div className="divide-y divide-border/25">
-                  {mentorRequests.length === 0 ? (
-                    <div className="py-10 text-center text-xs text-muted-foreground">
-                      No active mentor support request tickets logged in database.
-                    </div>
-                  ) : (
-                    mentorRequests.map((req) => {
-                      const currentAssignee = assigneeMentorMap[req.id] || '';
-
-                      return (
-                        <div key={req.id} className="py-4 first:pt-0 last:pb-0 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-                          <div className="space-y-2 flex-1 min-w-0">
-                            <div className="flex items-center gap-3">
-                              <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase border ${
-                                req.priority === 'Urgent' 
-                                  ? 'bg-red-500/10 border-red-500/30 text-red-400' 
-                                  : req.priority === 'High' 
-                                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
-                                  : 'bg-muted border-border/20 text-muted-foreground'
-                              }`}>
-                                {req.priority} Priority
-                              </span>
-                              <span className="text-[10px] font-mono text-muted-foreground">{req.id}</span>
-                              <span className={`text-[10px] font-semibold ${
-                                req.status === 'resolved' 
-                                  ? 'text-emerald-400' 
-                                  : req.status === 'assigned' 
-                                  ? 'text-blue-400' 
-                                  : 'text-yellow-400'
-                              }`}>
-                                ● {req.status.toUpperCase()}
-                              </span>
-                            </div>
-
-                            <h4 className="text-xs font-black text-foreground">
-                              {req.teamName} · <span className="text-muted-foreground font-semibold">{req.challengeTitle}</span>
-                            </h4>
-
-                            <p className="text-[11px] text-muted-foreground leading-relaxed font-sans mt-1">
-                              <span className="font-bold text-foreground">Category: {req.type}</span> — {req.description}
-                            </p>
-
-                            <div className="flex items-center gap-4 text-[9px] text-muted-foreground">
-                              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Created: {new Date(req.createdAt).toLocaleTimeString()}</span>
-                              {req.mentorName && (
-                                <span className="flex items-center gap-1 text-blue-400"><UserCheck className="w-3.5 h-3.5" /> Assigned: {req.mentorName}</span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Action panel */}
-                          {req.status !== 'resolved' && (
-                            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
-                              {req.status === 'pending' && (
-                                <div className="flex items-center gap-2 w-full sm:w-auto">
-                                  <select 
-                                    value={currentAssignee}
-                                    onChange={e => setAssigneeMentorMap(prev => ({ ...prev, [req.id]: e.target.value }))}
-                                    className="text-[11px] font-semibold p-2 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50"
-                                  >
-                                    <option value="">Choose Mentor...</option>
-                                    {mentors.map(m => (
-                                      <option key={m.id} value={m.name}>{m.name} ({m.expertise[0]})</option>
-                                    ))}
-                                  </select>
-                                  <button
-                                    onClick={() => handleAssignMentorSubmit(req.id)}
-                                    className="px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white font-bold text-xs uppercase tracking-wide cursor-pointer transition-colors"
-                                  >
-                                    Assign
-                                  </button>
-                                </div>
-                              )}
-
-                              <button
-                                onClick={() => {
-                                  resolveMentorRequest(req.id);
-                                  addNotification(
-                                    'Support Request Resolved',
-                                    `Ticket ${req.id} resolved by Faculty.`,
-                                    'mentor'
-                                  );
-                                }}
-                                className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wide cursor-pointer transition-colors w-full sm:w-auto"
-                              >
-                                Mark Resolved
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </>
+        <FacultyPortal />
       )}
 
       {/* ========================================== */}
@@ -1015,7 +836,7 @@ export function AdminPortal() {
               </div>
 
               <div className="pt-3 border-t border-border/15">
-                <button onClick={() => alert('SSO credentials refreshed!')} className="py-2.5 px-5 rounded-xl border border-border/30 hover:border-border text-foreground hover:bg-muted/15 font-bold text-xs uppercase tracking-wide cursor-pointer transition-colors w-full">
+                <button onClick={() => addToast('SSO Credentials Refreshed', 'Your SSO workspace credentials have been successfully refreshed!', 'success')} className="py-2.5 px-5 rounded-xl border border-border/30 hover:border-border text-foreground hover:bg-muted/15 font-bold text-xs uppercase tracking-wide cursor-pointer transition-colors w-full">
                   Refresh Credentials
                 </button>
               </div>
@@ -1042,6 +863,61 @@ export function AdminPortal() {
           </div>
         </div>
       )}
+      {/* Custom Destructive Delete Confirmation Modal */}
+      <AnimatePresence>
+        {trackToDelete && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+            {/* Scrim backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setTrackToDelete(null)}
+              className="absolute inset-0 bg-black/85 backdrop-blur-sm"
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="relative w-full max-w-md bg-[#0a0a0a] border border-red-500/25 rounded-[21px] p-6 shadow-[0_20px_50px_rgba(255,0,15,0.15)] z-10 text-center"
+            >
+              <div className="mx-auto w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-4 animate-pulse">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-extrabold text-white">
+                Delete Innovation Track?
+              </h3>
+              <p className="text-xs text-muted-foreground mt-2 leading-relaxed max-w-sm mx-auto font-sans">
+                Are you sure you want to delete track <span className="text-white font-bold">"{trackToDelete.title}"</span>? This will permanently remove it from the roster and cannot be undone.
+              </p>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setTrackToDelete(null)}
+                  className="flex-1 py-2.5 rounded-xl border border-border/30 hover:border-border text-foreground hover:bg-muted/15 font-bold text-xs uppercase transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    deleteChallenge(trackToDelete.id);
+                    addToast('Track Deleted', `Track "${trackToDelete.title}" has been successfully removed.`, 'success');
+                    setTrackToDelete(null);
+                  }}
+                  className="flex-grow py-2.5 rounded-xl bg-primary hover:bg-[#e0000d] text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-primary/10"
+                >
+                  Delete Track
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

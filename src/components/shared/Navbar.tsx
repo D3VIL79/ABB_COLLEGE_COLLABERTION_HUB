@@ -47,6 +47,41 @@ export function Navbar({ onSearchClick }: NavbarProps) {
       ]
     : [];
 
+  const menuConfig: Record<string, { id: string; label: string }[]> = {
+    student: [
+      { id: 'dashboard', label: 'Home' },
+      { id: 'explorer', label: 'Challenges' },
+      { id: 'twin', label: 'Venue Map' },
+      { id: 'leaderboard', label: 'Leaderboard' },
+      { id: 'team', label: 'Submissions' },
+      { id: 'help-desk', label: 'Help Desk' },
+      { id: 'profile', label: 'Settings' },
+    ],
+    staff: [
+      { id: 'dashboard', label: 'Teams Dashboard' },
+      { id: 'requests', label: 'Support Requests' },
+      { id: 'profile', label: 'Settings' },
+    ],
+    admin: [
+      { id: 'dashboard', label: 'Event Hub' },
+      { id: 'manage-events', label: 'Manage Events' },
+      { id: 'analytics', label: 'Performance' },
+      { id: 'profile', label: 'Settings' },
+    ],
+    judge: [
+      { id: 'dashboard', label: 'Assessor Hub' },
+      { id: 'judge', label: 'Grade Teams' },
+      { id: 'analytics', label: 'Leaderboard' },
+      { id: 'profile', label: 'Settings' },
+    ],
+    mentor: [
+      { id: 'dashboard', label: 'Mentor Hub' },
+      { id: 'mentor', label: 'Help Requests' },
+      { id: 'twin', label: 'Venue Map' },
+      { id: 'profile', label: 'Settings' },
+    ]
+  };
+
   return (
     <nav className={`sticky top-0 z-[999] w-full transition-all duration-300 ${
       scrolled 
@@ -251,37 +286,57 @@ export function Navbar({ onSearchClick }: NavbarProps) {
             )}
 
             {/* Mobile Menu Toggle */}
-            {role === 'guest' && (
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 text-white/60 hover:text-white cursor-pointer"
-              >
-                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            )}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 text-white/60 hover:text-white cursor-pointer"
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
 
         {/* Mobile Menu */}
         <AnimatePresence>
-          {isMobileMenuOpen && role === 'guest' && (
+          {isMobileMenuOpen && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden overflow-hidden border-t border-white/5"
+              className="md:hidden overflow-hidden border-t border-white/5 bg-black"
             >
               <div className="py-4 space-y-1">
-                {navLinks.map((link) => (
-                  <button
-                    key={link.id}
-                    onClick={() => handleNavClick(link.id)}
-                    className="block w-full text-left px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-                  >
-                    {link.label}
-                  </button>
-                ))}
+                {role === 'guest' ? (
+                  navLinks.map((link) => (
+                    <button
+                      key={link.id}
+                      onClick={() => handleNavClick(link.id)}
+                      className="block w-full text-left px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                    >
+                      {link.label}
+                    </button>
+                  ))
+                ) : (
+                  (menuConfig[role] || []).map((link) => {
+                    const isActive = link.id === activeTab;
+                    return (
+                      <button
+                        key={link.id}
+                        onClick={() => {
+                          setTab(link.id);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`block w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${
+                          isActive
+                            ? 'bg-primary/20 text-primary font-bold border-l-2 border-primary pl-3.5'
+                            : 'text-white/70 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {link.label}
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </motion.div>
           )}
