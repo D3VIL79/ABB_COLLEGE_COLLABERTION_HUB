@@ -130,37 +130,37 @@ const bookVariants = {
 /* ------------------------------------------------------------------ */
 const timelineEvents = [
   {
-    date: 'June 22, 2026',
+    date: 'July 22, 2026',
     title: 'Opening Ceremony & Keynote',
     description:
       'Platform launch, welcome address from ABB leadership, and innovation challenge briefing.',
   },
   {
-    date: 'June 22, 2026',
+    date: 'July 22, 2026',
     title: 'Team Formation & Ideation',
     description:
       'Form your teams, select your challenge track, and begin the brainstorming sprint.',
   },
   {
-    date: 'June 23, 2026',
+    date: 'July 23, 2026',
     title: 'Workshops & Mentor Sessions',
     description:
       'Attend hands-on workshops on Smart Grids, Robotics, Edge AI, and Sustainability.',
   },
   {
-    date: 'June 24, 2026',
+    date: 'July 24, 2026',
     title: 'Checkpoint Review',
     description:
       'Present your project architecture and progress to mentors for mid-event feedback.',
   },
   {
-    date: 'June 25, 2026',
+    date: 'July 25, 2026',
     title: 'Final Submissions Due',
     description:
       'Submit your code repositories, demo videos, and presentation decks by 23:59 IST.',
   },
   {
-    date: 'June 26, 2026',
+    date: 'July 26, 2026',
     title: 'Demo Day & Awards Ceremony',
     description:
       'Top teams present live demos. Winners announced and prizes awarded by ABB executives.',
@@ -473,7 +473,7 @@ export function LandingView() {
             </div>
 
             {/* Card 3: Elite Benefits (Modal Trigger) */}
-            <div 
+            <div
               onClick={() => setIsBenefitsOpen(true)}
               className="text-center cursor-pointer group hover:scale-[1.05] transition-transform duration-300 bg-[#111111]/30 hover:bg-[#111111]/60 border border-white/5 hover:border-primary/30 p-6 rounded-2xl"
             >
@@ -899,7 +899,7 @@ export function LandingView() {
                   ].map((benefit, idx) => {
                     const BenefitIcon = benefit.icon;
                     return (
-                      <div 
+                      <div
                         key={idx}
                         className="bg-[#111111] border border-white/5 p-4 rounded-xl flex items-start gap-4 hover:border-primary/20 hover:bg-[#151515] transition-all"
                       >
@@ -965,8 +965,8 @@ export function LandingView() {
                         {selectedTrackChallenge.track}
                       </span>
                       <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
-                        {activePsIndex === 0 
-                          ? 'Track Overview' 
+                        {activePsIndex === 0
+                          ? 'Track Overview'
                           : `PS ${activePsIndex} of ${problemStatements.length}`}
                       </span>
                     </div>
@@ -979,11 +979,10 @@ export function LandingView() {
                           setDirection(-1);
                           setActivePsIndex((prev) => Math.max(0, prev - 1));
                         }}
-                        className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border rounded transition-all cursor-pointer ${
-                          activePsIndex === 0
+                        className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border rounded transition-all cursor-pointer ${activePsIndex === 0
                             ? 'border-white/5 text-white/20 bg-transparent'
                             : 'border-white/20 text-white hover:bg-white/5 active:scale-95'
-                        }`}
+                          }`}
                       >
                         ← Prev
                       </button>
@@ -993,11 +992,10 @@ export function LandingView() {
                           setDirection(1);
                           setActivePsIndex((prev) => Math.min(totalPages - 1, prev + 1));
                         }}
-                        className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border rounded transition-all cursor-pointer ${
-                          activePsIndex === totalPages - 1
+                        className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border rounded transition-all cursor-pointer ${activePsIndex === totalPages - 1
                             ? 'border-white/5 text-white/20 bg-transparent'
                             : 'border-white/20 text-white hover:bg-white/5 active:scale-95'
-                        }`}
+                          }`}
                       >
                         Next →
                       </button>

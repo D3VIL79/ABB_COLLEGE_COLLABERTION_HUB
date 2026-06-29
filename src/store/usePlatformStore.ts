@@ -51,6 +51,21 @@ export interface Team {
   collaborationScore: number;
   progressHistory: { date: string; progress: number; note?: string }[];
   college: string;
+  assignedMentorId?: string;
+  assignedMentorName?: string;
+  proposedFeatures?: { id: string; name: string; description: string; implemented: boolean; round: number }[];
+  mentorEvaluations?: {
+    round: number;
+    mentorName: string;
+    scores: { criteria: string; score: number }[];
+    checklistRemarks: { featureName: string; implemented: boolean; score: number }[];
+    comment: string;
+    pointsEarned: number;
+    submittedAt: string;
+  }[];
+  badges?: string[];
+  points?: number; // Total points from evaluations
+  previousPoints?: number; // Points from previous rounds to track shift
 }
 
 export interface ProblemStatement {
@@ -203,7 +218,8 @@ interface PlatformState {
   phases: Phase[];
   activePhaseIndex: number;
   pinnedTeamIds: string[];
-  
+  evaluationRound: number;
+
   // Actions
   setRole: (role: UserRole) => void;
   setTab: (tab: string) => void;
@@ -237,6 +253,18 @@ interface PlatformState {
   updatePhase: (id: string, name: string, date: string, description: string) => void;
   deletePhase: (id: string) => void;
   togglePinTeam: (teamId: string) => void;
+  setEvaluationRound: (round: number) => void;
+  assignMentorToTeam: (teamId: string, mentorId: string) => void;
+  updateProposedFeatures: (teamId: string, features: NonNullable<Team['proposedFeatures']>) => void;
+  submitMentorEvaluation: (
+    teamId: string,
+    round: number,
+    mentorName: string,
+    scores: { criteria: string; score: number }[],
+    checklistRemarks: { featureName: string; implemented: boolean; score: number }[],
+    comment: string,
+    progress: number
+  ) => void;
   toasts: ToastItem[];
   addToast: (title: string, message: string, type?: 'success' | 'error' | 'info') => void;
   removeToast: (id: string) => void;
@@ -248,7 +276,7 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
   selectedChallengeId: null,
   toasts: [],
   addToast: (title, message, type = 'info') => {
-    const id = `toast-${Date.now()}`;
+    const id = `toast-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
     set((state) => ({
       toasts: [...state.toasts, { id, title, message, type }]
     }));
@@ -261,48 +289,49 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
   removeToast: (id) => set((state) => ({
     toasts: state.toasts.filter(t => t.id !== id)
   })),
-  countdownDate: '2026-06-22T09:00:00+05:30',
+  countdownDate: '2026-07-21T09:00:00+05:30',
   activePhaseIndex: 0,
+  evaluationRound: 1,
   phases: [
     {
       id: 'p-1',
-      date: 'June 22, 2026',
+      date: 'July 22, 2026',
       name: 'Opening Ceremony & Keynote',
       description: 'Platform launch, welcome address from ABB leadership, and innovation challenge briefing.'
     },
     {
       id: 'p-2',
-      date: 'June 22, 2026',
+      date: 'July 22, 2026',
       name: 'Team Formation & Ideation',
       description: 'Form your teams, select your challenge track, and begin the brainstorming sprint.'
     },
     {
       id: 'p-3',
-      date: 'June 23, 2026',
+      date: 'July 23, 2026',
       name: 'Workshops & Mentor Sessions',
       description: 'Attend hands-on workshops on Smart Grids, Robotics, Edge AI, and Sustainability.'
     },
     {
       id: 'p-4',
-      date: 'June 24, 2026',
+      date: 'July 24, 2026',
       name: 'Checkpoint Review',
       description: 'Present your project architecture and progress to mentors for mid-event feedback.'
     },
     {
       id: 'p-5',
-      date: 'June 25, 2026',
+      date: 'July 25, 2026',
       name: 'Final Submissions Due',
       description: 'Submit your code repositories, demo videos, and presentation decks by 23:59 IST.'
     },
     {
       id: 'p-6',
-      date: 'June 26, 2026',
+      date: 'July 26, 2026',
       name: 'Demo Day & Awards Ceremony',
       description: 'Top teams present live demos. Winners announced and prizes awarded by ABB executives.'
     }
   ],
   compareChallengeIds: [],
-  
+
   user: {
     firstName: 'Om',
     lastName: 'Zambare',
@@ -324,8 +353,71 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       inApp: true,
     }
   },
-  
-  team: null,
+
+  team: {
+    id: 't-01',
+    name: 'CyberPulse',
+    code: 'ABB-CPLSE-98',
+    track: 'Energy Systems',
+    challengeId: 'ch-01',
+    progress: 65,
+    collaborationScore: 92,
+    college: 'ABB Engineering Institute',
+    assignedMentorId: 'men-02',
+    assignedMentorName: 'Elena Rostova',
+    points: 85,
+    previousPoints: 0,
+    badges: ['Pitch Master'],
+    proposedFeatures: [
+      { id: 'f-1', name: 'Real-time Solar Generation Tracker', description: 'Tracks localized solar irradiance and battery load.', implemented: true, round: 1 },
+      { id: 'f-2', name: 'Smart Load Balancer Engine', description: 'Algorithmic reinforcement solver to distribute batteries.', implemented: true, round: 2 },
+      { id: 'f-3', name: 'Interactive Grid Topology Map', description: 'SVG based visualization of microgrid distribution hubs.', implemented: false, round: 3 }
+    ],
+    mentorEvaluations: [
+      {
+        round: 1,
+        mentorName: 'Elena Rostova',
+        scores: [
+          { criteria: 'Core Idea & PPT', score: 92 },
+          { criteria: 'Feature Set Completeness', score: 85 },
+          { criteria: 'Unique Value Proposition', score: 88 }
+        ],
+        checklistRemarks: [
+          { featureName: 'Real-time Solar Generation Tracker', implemented: true, score: 10 }
+        ],
+        comment: 'Excellent pitch. The weather forecasting API integration is a solid USP.',
+        pointsEarned: 85,
+        submittedAt: '2026-06-22T14:30:00Z'
+      }
+    ],
+    progressHistory: [
+      { date: '2026-06-22T09:00:00Z', progress: 15, note: 'Team registration and brainstorming' },
+      { date: '2026-06-22T15:00:00Z', progress: 30, note: 'Architecture diagram finalized' },
+      { date: '2026-06-23T10:00:00Z', progress: 50, note: 'Decentralized solver core completed' },
+      { date: '2026-06-24T14:30:00Z', progress: 65, note: 'Framer Motion dashboard integrated' }
+    ],
+    submissions: [
+      {
+        id: 'sub-01',
+        teamId: 't-01',
+        challengeId: 'ch-01',
+        submittedAt: '2026-06-17T14:30:00Z',
+        githubUrl: 'https://github.com/cyberpulse/abb-grid',
+        demoUrl: 'https://cyberpulse-grid.vercel.app',
+        description: 'Decentralized microgrid simulator leveraging localized weather data and reinforcement learning logic to balance residential solar cell distribution.',
+        presentationFile: 'cyberpulse_deck.pdf',
+        status: 'pending',
+        weightedScore: 78,
+        facultyStatus: 'pending'
+      }
+    ],
+    members: [
+      { id: 'm-01', fullName: 'Sarah Connor', email: 's.connor@college.edu', role: 'Leader', skills: ['Python', 'AI'], status: 'active', college: 'ABB Engineering Institute', year: '3rd Year' },
+      { id: 'm-02', fullName: 'John Doe', email: 'j.doe@college.edu', role: 'Developer', skills: ['React', 'TypeScript'], status: 'active', college: 'ABB Engineering Institute', year: '3rd Year' },
+      { id: 'm-03', fullName: 'Elena Gilbert', email: 'e.gilbert@college.edu', role: 'Designer', skills: ['Figma', 'CSS'], status: 'active', college: 'ABB Engineering Institute', year: '3rd Year' },
+      { id: 'm-stud', fullName: 'Om Zambare', email: 'om.zambare@college.edu', role: 'Developer', skills: ['React', 'TypeScript', 'Node.js', 'Python'], status: 'active', college: 'ABB Engineering Institute', year: '4th Year' }
+    ]
+  },
 
   challenges: [
     {
@@ -1416,6 +1508,33 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       progress: 65,
       collaborationScore: 92,
       college: 'ABB Engineering Institute',
+      assignedMentorId: 'men-02',
+      assignedMentorName: 'Elena Rostova',
+      points: 85,
+      previousPoints: 0,
+      badges: ['Pitch Master'],
+      proposedFeatures: [
+        { id: 'f-1', name: 'Real-time Solar Generation Tracker', description: 'Tracks localized solar irradiance and battery load.', implemented: true, round: 1 },
+        { id: 'f-2', name: 'Smart Load Balancer Engine', description: 'Algorithmic reinforcement solver to distribute batteries.', implemented: true, round: 2 },
+        { id: 'f-3', name: 'Interactive Grid Topology Map', description: 'SVG based visualization of microgrid distribution hubs.', implemented: false, round: 3 }
+      ],
+      mentorEvaluations: [
+        {
+          round: 1,
+          mentorName: 'Elena Rostova',
+          scores: [
+            { criteria: 'Core Idea & PPT', score: 92 },
+            { criteria: 'Feature Set Completeness', score: 85 },
+            { criteria: 'Unique Value Proposition', score: 88 }
+          ],
+          checklistRemarks: [
+            { featureName: 'Real-time Solar Generation Tracker', implemented: true, score: 10 }
+          ],
+          comment: 'Excellent pitch. The weather forecasting API integration is a solid USP.',
+          pointsEarned: 85,
+          submittedAt: '2026-06-22T14:30:00Z'
+        }
+      ],
       progressHistory: [
         { date: '2026-06-22T09:00:00Z', progress: 15, note: 'Team registration and brainstorming' },
         { date: '2026-06-22T15:00:00Z', progress: 30, note: 'Architecture diagram finalized' },
@@ -1440,7 +1559,8 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       members: [
         { id: 'm-01', fullName: 'Sarah Connor', email: 's.connor@college.edu', role: 'Leader', skills: ['Python', 'AI'], status: 'active', college: 'ABB Engineering Institute', year: '3rd Year' },
         { id: 'm-02', fullName: 'John Doe', email: 'j.doe@college.edu', role: 'Developer', skills: ['React', 'TypeScript'], status: 'active', college: 'ABB Engineering Institute', year: '3rd Year' },
-        { id: 'm-03', fullName: 'Elena Gilbert', email: 'e.gilbert@college.edu', role: 'Designer', skills: ['Figma', 'CSS'], status: 'active', college: 'ABB Engineering Institute', year: '3rd Year' }
+        { id: 'm-03', fullName: 'Elena Gilbert', email: 'e.gilbert@college.edu', role: 'Designer', skills: ['Figma', 'CSS'], status: 'active', college: 'ABB Engineering Institute', year: '3rd Year' },
+        { id: 'm-stud', fullName: 'Om Zambare', email: 'om.zambare@college.edu', role: 'Developer', skills: ['React', 'TypeScript', 'Node.js', 'Python'], status: 'active', college: 'ABB Engineering Institute', year: '4th Year' }
       ]
     },
     {
@@ -1452,6 +1572,16 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       progress: 80,
       collaborationScore: 88,
       college: 'Pune Institute of Computer Technology',
+      assignedMentorId: 'men-03',
+      assignedMentorName: 'Kenji Sato',
+      points: 0,
+      previousPoints: 0,
+      badges: [],
+      proposedFeatures: [
+        { id: 'f-4', name: 'LiDAR Telemetry Parser', description: 'Parses raw sensor packets into coordinates.', implemented: true, round: 1 },
+        { id: 'f-5', name: 'ROS Navigation Planner Node', description: 'Computes autonomous collision-free paths.', implemented: false, round: 2 }
+      ],
+      mentorEvaluations: [],
       progressHistory: [
         { date: '2026-06-22T09:00:00Z', progress: 15, note: 'ROS node setup' },
         { date: '2026-06-23T09:00:00Z', progress: 45, note: 'Kinematics verification' },
@@ -1472,6 +1602,16 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       progress: 40,
       collaborationScore: 85,
       college: 'K.K. Wagh COE, Nashik',
+      assignedMentorId: 'men-01',
+      assignedMentorName: 'Dr. Marcus Vancamp',
+      points: 0,
+      previousPoints: 0,
+      badges: [],
+      proposedFeatures: [
+        { id: 'f-6', name: 'Carbon Accounting Formula Engine', description: 'Standardized carbon ledger calculator.', implemented: true, round: 1 },
+        { id: 'f-7', name: 'Green Credit Dashboard', description: 'Renders credit balance and certificates.', implemented: false, round: 2 }
+      ],
+      mentorEvaluations: [],
       progressHistory: [
         { date: '2026-06-22T09:00:00Z', progress: 15, note: 'Topic selected: Carbon Accounting' },
         { date: '2026-06-23T14:00:00Z', progress: 40, note: 'Initial calculations and models structured' }
@@ -1490,6 +1630,16 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       progress: 90,
       collaborationScore: 95,
       college: 'IIT Bombay',
+      assignedMentorId: 'men-04',
+      assignedMentorName: 'Sarah Jenkins',
+      points: 0,
+      previousPoints: 0,
+      badges: [],
+      proposedFeatures: [
+        { id: 'f-8', name: 'CNN Classification Core', description: 'Classifies microgrid thermal anomalies.', implemented: true, round: 1 },
+        { id: 'f-9', name: 'Safety Alerting API Dispatcher', description: 'Sends automated warning hooks.', implemented: false, round: 2 }
+      ],
+      mentorEvaluations: [],
       progressHistory: [
         { date: '2026-06-22T09:00:00Z', progress: 20, note: 'Brainstormed AI models' },
         { date: '2026-06-23T10:00:00Z', progress: 55, note: 'Dataset preparation complete' },
@@ -1511,6 +1661,50 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       progress: 75,
       collaborationScore: 89,
       college: 'BITS Pilani',
+      assignedMentorId: 'men-04',
+      assignedMentorName: 'Sarah Jenkins',
+      points: 155,
+      previousPoints: 80,
+      badges: ['Pitch Master', 'MVP Builder'],
+      proposedFeatures: [
+        { id: 'f-10', name: 'TensorRT Acceleration Layer', description: 'Model conversion for embedded processors.', implemented: true, round: 1 },
+        { id: 'f-11', name: 'Resource Monitor Daemon', description: 'Monitors memory, CPU, and temperatures.', implemented: true, round: 2 },
+        { id: 'f-12', name: 'Vibration Signal Spectrum Chart', description: 'FFT calculations and graph rendering.', implemented: true, round: 2 },
+        { id: 'f-13', name: 'Anomaly Warning SMS dispatch', description: 'SMS alerting hook for remote operators.', implemented: false, round: 3 }
+      ],
+      mentorEvaluations: [
+        {
+          round: 1,
+          mentorName: 'Sarah Jenkins',
+          scores: [
+            { criteria: 'Core Idea & PPT', score: 90 },
+            { criteria: 'Feature Set Completeness', score: 80 },
+            { criteria: 'Unique Value Proposition', score: 70 }
+          ],
+          checklistRemarks: [
+            { featureName: 'TensorRT Acceleration Layer', implemented: true, score: 10 }
+          ],
+          comment: 'Solid idea, very relevant to ABB digital vents. Ensure target hardware metrics are tracked.',
+          pointsEarned: 80,
+          submittedAt: '2026-06-22T16:00:00Z'
+        },
+        {
+          round: 2,
+          mentorName: 'Sarah Jenkins',
+          scores: [
+            { criteria: 'Implemented Features Quality', score: 85 },
+            { criteria: 'Functionality & Stability', score: 90 },
+            { criteria: 'Code Architecture scalability', score: 80 }
+          ],
+          checklistRemarks: [
+            { featureName: 'Resource Monitor Daemon', implemented: true, score: 10 },
+            { featureName: 'Vibration Signal Spectrum Chart', implemented: true, score: 10 }
+          ],
+          comment: 'The memory monitor works well on simulated boards. Great progress!',
+          pointsEarned: 75,
+          submittedAt: '2026-06-23T18:00:00Z'
+        }
+      ],
       progressHistory: [
         { date: '2026-06-22T10:00:00Z', progress: 10, note: 'Edge controller initialized' },
         { date: '2026-06-23T11:00:00Z', progress: 40, note: 'TensorRT compiler pipeline fixed' },
@@ -1545,6 +1739,17 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       progress: 55,
       collaborationScore: 82,
       college: 'Delhi Technological University',
+      assignedMentorId: 'men-02',
+      assignedMentorName: 'Elena Rostova',
+      points: 0,
+      previousPoints: 0,
+      badges: [],
+      proposedFeatures: [
+        { id: 'f-18', name: 'MQTT packet broker connection', description: 'Validates packet flow rates.', implemented: true, round: 1 },
+        { id: 'f-19', name: 'UI Gauge controls', description: 'Dashboard elements for temperature telemetry.', implemented: false, round: 2 },
+        { id: 'f-19b', name: 'Real-time Signal Graph', description: 'Visualizes historical telemetry waveforms.', implemented: false, round: 3 }
+      ],
+      mentorEvaluations: [],
       progressHistory: [
         { date: '2026-06-22T09:00:00Z', progress: 15, note: 'Sensor protocols defined' },
         { date: '2026-06-23T15:00:00Z', progress: 55, note: 'MQTT packet brokers validated' }
@@ -1565,6 +1770,16 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       progress: 30,
       collaborationScore: 70,
       college: 'RV College of Engineering',
+      assignedMentorId: 'men-01',
+      assignedMentorName: 'Dr. Marcus Vancamp',
+      points: 0,
+      previousPoints: 0,
+      badges: [],
+      proposedFeatures: [
+        { id: 'f-20', name: 'Grid emissions factors API', description: 'Calls international carbon values.', implemented: true, round: 1 },
+        { id: 'f-21', name: 'React visual map interface', description: 'Visualizes carbon offset areas.', implemented: false, round: 2 }
+      ],
+      mentorEvaluations: [],
       progressHistory: [
         { date: '2026-06-22T11:00:00Z', progress: 10, note: 'Project proposal drafted' },
         { date: '2026-06-23T16:00:00Z', progress: 30, note: 'Initial carbon offset formula setup' }
@@ -1584,6 +1799,50 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       progress: 95,
       collaborationScore: 94,
       college: 'Vellore Institute of Technology',
+      assignedMentorId: 'men-03',
+      assignedMentorName: 'Kenji Sato',
+      points: 175,
+      previousPoints: 85,
+      badges: ['Pitch Master', 'MVP Builder'],
+      proposedFeatures: [
+        { id: 'f-14', name: 'LiDAR Telemetry Map Visualizer', description: 'Interactive canvas maps sensor coordinates.', implemented: true, round: 1 },
+        { id: 'f-15', name: 'Autonomous Path-Planner Core', description: 'A* pathfinding solver logic.', implemented: true, round: 2 },
+        { id: 'f-16', name: 'Fleet Controller Coordinator', description: 'Syncs multiple robots coordination.', implemented: true, round: 2 },
+        { id: 'f-17', name: 'Obstacle Alert Dispatcher', description: 'Broadcasting telemetry hooks on warnings.', implemented: false, round: 3 }
+      ],
+      mentorEvaluations: [
+        {
+          round: 1,
+          mentorName: 'Kenji Sato',
+          scores: [
+            { criteria: 'Core Idea & PPT', score: 95 },
+            { criteria: 'Feature Set Completeness', score: 90 },
+            { criteria: 'Unique Value Proposition', score: 85 }
+          ],
+          checklistRemarks: [
+            { featureName: 'LiDAR Telemetry Map Visualizer', implemented: true, score: 10 }
+          ],
+          comment: 'LiDAR maps look spectacular. Pathfinding algorithm will be the main bottleneck, focus there.',
+          pointsEarned: 90,
+          submittedAt: '2026-06-22T11:00:00Z'
+        },
+        {
+          round: 2,
+          mentorName: 'Kenji Sato',
+          scores: [
+            { criteria: 'Implemented Features Quality', score: 90 },
+            { criteria: 'Functionality & Stability', score: 95 },
+            { criteria: 'Code Architecture scalability', score: 90 }
+          ],
+          checklistRemarks: [
+            { featureName: 'Autonomous Path-Planner Core', implemented: true, score: 10 },
+            { featureName: 'Fleet Controller Coordinator', implemented: true, score: 10 }
+          ],
+          comment: 'Very stable ROS path solver. UI UX is highly polished.',
+          pointsEarned: 85,
+          submittedAt: '2026-06-23T15:00:00Z'
+        }
+      ],
       progressHistory: [
         { date: '2026-06-22T09:00:00Z', progress: 25, note: 'LiDAR path mapping setup' },
         { date: '2026-06-23T11:00:00Z', progress: 60, note: 'Localization algorithm optimized' },
@@ -1620,6 +1879,16 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       progress: 45,
       collaborationScore: 80,
       college: 'SRM University',
+      assignedMentorId: 'men-02',
+      assignedMentorName: 'Elena Rostova',
+      points: 0,
+      previousPoints: 0,
+      badges: [],
+      proposedFeatures: [
+        { id: 'f-22', name: 'Microgrid circuit definitions', description: 'Compiles resistance and reactance formulas.', implemented: true, round: 1 },
+        { id: 'f-23', name: 'Power factor controller dashboard', description: 'Visualizes capacitors and load states.', implemented: false, round: 2 }
+      ],
+      mentorEvaluations: [],
       progressHistory: [
         { date: '2026-06-22T09:00:00Z', progress: 15, note: 'Conceptual model finalized' },
         { date: '2026-06-23T14:00:00Z', progress: 45, note: 'Circuit equations solved' }
@@ -1639,6 +1908,16 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       progress: 60,
       collaborationScore: 84,
       college: 'College of Engineering Guindy',
+      assignedMentorId: 'men-01',
+      assignedMentorName: 'Dr. Marcus Vancamp',
+      points: 0,
+      previousPoints: 0,
+      badges: [],
+      proposedFeatures: [
+        { id: 'f-24', name: 'Operations flowchart canvas', description: 'Visualizes industrial workflows.', implemented: true, round: 1 },
+        { id: 'f-25', name: 'Throughput optimization solver', description: 'Calculates maximum network bottlenecks.', implemented: false, round: 2 }
+      ],
+      mentorEvaluations: [],
       progressHistory: [
         { date: '2026-06-22T10:00:00Z', progress: 20, note: 'Operations flowcharts created' },
         { date: '2026-06-23T12:00:00Z', progress: 60, note: 'Optimization engine coded' }
@@ -1787,15 +2066,15 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
   setRole: (role) => set({ role, activeTab: role === 'guest' ? 'home' : 'dashboard' }),
   setTab: (activeTab) => set({ activeTab }),
   setSelectedChallengeId: (selectedChallengeId) => set({ selectedChallengeId }),
-  
+
   togglePinTeam: (teamId) => set((state) => {
     const isPinned = state.pinnedTeamIds.includes(teamId);
-    const pinnedTeamIds = isPinned 
+    const pinnedTeamIds = isPinned
       ? state.pinnedTeamIds.filter(id => id !== teamId)
       : [...state.pinnedTeamIds, teamId];
     return { pinnedTeamIds };
   }),
-  
+
   toggleCompareChallenge: (id) => set((state) => {
     const isCompared = state.compareChallengeIds.includes(id);
     if (isCompared) {
@@ -1805,12 +2084,12 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       return { compareChallengeIds: [...state.compareChallengeIds, id] };
     }
   }),
-  
+
   clearCompareChallenges: () => set({ compareChallengeIds: [] }),
-  
+
   updateUserProfile: (updates) => set((state) => {
     const updatedUser = { ...state.user, ...updates };
-    
+
     // Calculate profile strength dynamically
     let strength = 20; // baseline
     if (updatedUser.firstName && updatedUser.lastName) strength += 15;
@@ -1819,11 +2098,11 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
     if (updatedUser.skills.length > 0) strength += 15;
     if (updatedUser.resumeUploaded) strength += 10;
     if (updatedUser.collegeIdUploaded) strength += 10;
-    
+
     updatedUser.profileStrength = Math.min(100, strength);
     return { user: updatedUser };
   }),
-  
+
   createTeam: (teamName, challengeId) => set((state) => {
     const selectedChallenge = state.challenges.find(c => c.id === challengeId);
     const newTeam: Team = {
@@ -1852,9 +2131,9 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
         { date: new Date().toISOString(), progress: 15, note: 'Team created and leader onboarded' }
       ]
     };
-    
+
     // Increment participants counter on challenge
-    const updatedChallenges = state.challenges.map(c => 
+    const updatedChallenges = state.challenges.map(c =>
       c.id === challengeId ? { ...c, participantsCount: c.participantsCount + 1 } : c
     );
 
@@ -1868,8 +2147,8 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       read: false
     };
 
-    return { 
-      team: newTeam, 
+    return {
+      team: newTeam,
       allTeams: [...state.allTeams, newTeam],
       challenges: updatedChallenges,
       notifications: [newNotification, ...state.notifications]
@@ -1879,7 +2158,7 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
   joinTeam: (code) => set((state) => {
     const foundTeam = state.allTeams.find(t => t.code === code);
     if (!foundTeam) return {}; // UI handles validation error
-    
+
     // Add user as a developer member in this team
     const updatedMembers = [
       ...foundTeam.members,
@@ -1897,7 +2176,7 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
 
     const updatedTeam = { ...foundTeam, members: updatedMembers };
     const updatedAllTeams = state.allTeams.map(t => t.id === foundTeam.id ? updatedTeam : t);
-    
+
     const newNotification: NotificationItem = {
       id: `not-${Date.now()}`,
       title: 'Joined Team',
@@ -1929,7 +2208,7 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
     ];
     const updatedTeam = { ...state.team, members: updatedMembers };
     const updatedAllTeams = state.allTeams.map(t => t.id === state.team!.id ? updatedTeam : t);
-    
+
     return {
       team: updatedTeam,
       allTeams: updatedAllTeams
@@ -1941,7 +2220,7 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
     const updatedMembers = state.team.members.filter(m => m.id !== memberId);
     const updatedTeam = { ...state.team, members: updatedMembers };
     const updatedAllTeams = state.allTeams.map(t => t.id === state.team!.id ? updatedTeam : t);
-    
+
     return {
       team: updatedTeam,
       allTeams: updatedAllTeams
@@ -1963,10 +2242,10 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       facultyStatus: 'pending'
     };
 
-    const updatedTeam = { 
-      ...state.team, 
-      progress: 100, 
-      submissions: [...state.team.submissions, newSubmission] 
+    const updatedTeam = {
+      ...state.team,
+      progress: 100,
+      submissions: [...state.team.submissions, newSubmission]
     };
 
     const updatedAllTeams = state.allTeams.map(t => {
@@ -2010,7 +2289,7 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
             const hasAllCriteria = algoItem && uiItem && archItem && presItem;
             const finalScore = typeof customFinalScore === 'number'
               ? customFinalScore
-              : (hasAllCriteria 
+              : (hasAllCriteria
                 ? Math.round((algo * 0.4) + (ui * 0.3) + (arch * 0.2) + (pres * 0.1))
                 : Math.round(scores.reduce((sum, item) => sum + item.score, 0) / scores.length));
 
@@ -2139,7 +2418,7 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
 
   requestMentor: (type, category, description, priority, preferredTime) => set((state) => {
     const teamName = state.team ? state.team.name : 'Individual Participant';
-    const challengeTitle = state.team 
+    const challengeTitle = state.team
       ? (state.challenges.find(c => c.id === state.team!.challengeId)?.title || 'General Development')
       : 'General Development';
 
@@ -2165,7 +2444,7 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       read: false
     };
 
-    const toastId = `toast-${Date.now()}`;
+    const toastId = `toast-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
     setTimeout(() => {
       set((s) => ({ toasts: s.toasts.filter(t => t.id !== toastId) }));
     }, 4000);
@@ -2178,7 +2457,7 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
   }),
 
   assignMentor: (requestId, mentorName) => set((state) => {
-    const updatedRequests = state.mentorRequests.map(req => 
+    const updatedRequests = state.mentorRequests.map(req =>
       req.id === requestId ? { ...req, status: 'assigned' as const, mentorName } : req
     );
 
@@ -2192,7 +2471,7 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       read: false
     };
 
-    const toastId = `toast-${Date.now()}`;
+    const toastId = `toast-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
     setTimeout(() => {
       set((s) => ({ toasts: s.toasts.filter(t => t.id !== toastId) }));
     }, 4000);
@@ -2205,21 +2484,21 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
   }),
 
   resolveMentorRequest: (requestId) => set((state) => {
-    const updatedRequests = state.mentorRequests.map(req => 
+    const updatedRequests = state.mentorRequests.map(req =>
       req.id === requestId ? { ...req, status: 'resolved' as const } : req
     );
     return { mentorRequests: updatedRequests };
   }),
 
   toggleChallengeBookmark: (id) => set((state) => {
-    const updatedChallenges = state.challenges.map(c => 
+    const updatedChallenges = state.challenges.map(c =>
       c.id === id ? { ...c, bookmarked: !c.bookmarked } : c
     );
     return { challenges: updatedChallenges };
   }),
 
   markNotificationAsRead: (id) => set((state) => {
-    const updatedNotifications = state.notifications.map(n => 
+    const updatedNotifications = state.notifications.map(n =>
       n.id === id ? { ...n, read: true } : n
     );
     return { notifications: updatedNotifications };
@@ -2231,7 +2510,7 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
   }),
 
   updateTwinAsset: (id, updates) => set((state) => {
-    const updatedAssets = state.twinAssets.map(asset => 
+    const updatedAssets = state.twinAssets.map(asset =>
       asset.id === id ? { ...asset, ...updates } : asset
     );
     return { twinAssets: updatedAssets };
@@ -2247,7 +2526,7 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       read: false
     };
     const toastType = type === 'submission' ? 'success' : type === 'deadline' ? 'error' : 'info';
-    const toastId = `toast-${Date.now()}`;
+    const toastId = `toast-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
     setTimeout(() => {
       set((s) => ({ toasts: s.toasts.filter(t => t.id !== toastId) }));
     }, 4000);
@@ -2315,5 +2594,189 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
       phases: updatedPhases,
       activePhaseIndex: newActiveIndex
     };
+  }),
+
+  setEvaluationRound: (round) => set((state) => {
+    const title = `Evaluation Round ${round} Started`;
+    const content = `Admin has initialized Round ${round} evaluation. Mentors can now submit reviews and students can update their checklists.`;
+    const newNotification: NotificationItem = {
+      id: `not-${Date.now()}`,
+      title,
+      content,
+      type: 'announcement',
+      timestamp: new Date().toISOString(),
+      read: false
+    };
+    return {
+      evaluationRound: round,
+      notifications: [newNotification, ...state.notifications],
+      toasts: [...state.toasts, { id: `toast-${Date.now()}-${Math.floor(Math.random() * 1000000)}`, title, message: content, type: 'info' }]
+    };
+  }),
+
+  assignMentorToTeam: (teamId, mentorId) => set((state) => {
+    const mentor = state.mentors.find(m => m.id === mentorId);
+    const mentorName = mentor ? mentor.name : mentorId;
+
+    const updatedAllTeams = state.allTeams.map((t) =>
+      t.id === teamId ? { ...t, assignedMentorId: mentorId, assignedMentorName: mentorName } : t
+    );
+
+    let updatedTeam = state.team;
+    if (state.team && state.team.id === teamId) {
+      const teamInDb = updatedAllTeams.find(t => t.id === teamId);
+      if (teamInDb) updatedTeam = teamInDb;
+    }
+
+    const teamName = state.allTeams.find(t => t.id === teamId)?.name || 'Team';
+    const newNotification: NotificationItem = {
+      id: `not-${Date.now()}`,
+      title: 'Mentor Assigned',
+      content: `Mentor ${mentorName} has been assigned to Team ${teamName}.`,
+      type: 'mentor',
+      timestamp: new Date().toISOString(),
+      read: false
+    };
+
+    return {
+      allTeams: updatedAllTeams,
+      team: updatedTeam,
+      notifications: [newNotification, ...state.notifications],
+      toasts: [...state.toasts, {
+        id: `toast-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+        title: 'Mentor Assigned',
+        message: `Assigned ${mentorName} to ${teamName}.`,
+        type: 'success'
+      }]
+    };
+  }),
+
+  updateProposedFeatures: (teamId, features) => set((state) => {
+    const updatedAllTeams = state.allTeams.map((t) =>
+      t.id === teamId ? { ...t, proposedFeatures: features } : t
+    );
+
+    let updatedTeam = state.team;
+    if (state.team && state.team.id === teamId) {
+      const teamInDb = updatedAllTeams.find(t => t.id === teamId);
+      if (teamInDb) updatedTeam = teamInDb;
+    }
+
+    return {
+      allTeams: updatedAllTeams,
+      team: updatedTeam
+    };
+  }),
+
+  submitMentorEvaluation: (teamId, round, mentorName, scores, checklistRemarks, comment, progress) => set((state) => {
+    const averageScore = scores.reduce((sum, s) => sum + s.score, 0) / (scores.length || 1);
+    const verifiedChecklistCount = checklistRemarks.filter(r => r.implemented).length;
+    const checklistScore = verifiedChecklistCount * 10;
+    const pointsEarned = Math.round(averageScore + checklistScore);
+
+    const targetTeam = state.allTeams.find(t => t.id === teamId);
+    if (!targetTeam) return {};
+
+    const currentEvaluations = targetTeam.mentorEvaluations || [];
+    const currentBadges = targetTeam.badges || [];
+    const previousTotalPoints = targetTeam.points || 0;
+
+    const filteredEvaluations = currentEvaluations.filter(e => e.round !== round);
+
+    const newEvaluation = {
+      round,
+      mentorName,
+      scores,
+      checklistRemarks,
+      comment,
+      pointsEarned,
+      submittedAt: new Date().toISOString()
+    };
+
+    const updatedEvaluations = [...filteredEvaluations, newEvaluation];
+    const newTotalPoints = updatedEvaluations.reduce((sum, evalItem) => sum + evalItem.pointsEarned, 0);
+
+    const newBadges = [...currentBadges];
+
+    if (round === 1 && averageScore >= 90 && !newBadges.includes("Pitch Master")) {
+      newBadges.push("Pitch Master");
+    }
+    if (round === 2 && verifiedChecklistCount >= 3 && !newBadges.includes("MVP Builder")) {
+      newBadges.push("MVP Builder");
+    }
+    if (round === 3 && !newBadges.includes("UIUX Wizard")) {
+      const uiuxScore = scores.find(s => s.criteria.toLowerCase().includes('ui') || s.criteria.toLowerCase().includes('ux'))?.score ?? averageScore;
+      if (uiuxScore >= 90) {
+        newBadges.push("UIUX Wizard");
+      }
+    }
+    if (round === 2 && !newBadges.includes("Stellar Growth")) {
+      const r1Eval = updatedEvaluations.find(e => e.round === 1);
+      if (r1Eval) {
+        const r1Points = r1Eval.pointsEarned;
+        if (pointsEarned - r1Points >= 40) {
+          newBadges.push("Stellar Growth");
+        }
+      }
+    }
+    if (newTotalPoints >= 250 && !newBadges.includes("Overachiever")) {
+      newBadges.push("Overachiever");
+    }
+
+    let updatedProposedFeatures = targetTeam.proposedFeatures || [];
+    checklistRemarks.forEach(remark => {
+      updatedProposedFeatures = updatedProposedFeatures.map(f =>
+        f.name === remark.featureName ? { ...f, implemented: remark.implemented } : f
+      );
+    });
+
+    const updatedAllTeams = state.allTeams.map(t => {
+      if (t.id === teamId) {
+        const updatedProgressHistory = [
+          ...(t.progressHistory || []),
+          { date: new Date().toISOString(), progress, note: `Round ${round} Evaluation: Progress set by mentor ${mentorName}` }
+        ];
+        return {
+          ...t,
+          points: newTotalPoints,
+          previousPoints: previousTotalPoints,
+          mentorEvaluations: updatedEvaluations,
+          badges: newBadges,
+          proposedFeatures: updatedProposedFeatures,
+          progress,
+          progressHistory: updatedProgressHistory
+        };
+      }
+      return t;
+    });
+
+    let updatedTeam = state.team;
+    if (state.team && state.team.id === teamId) {
+      const teamInDb = updatedAllTeams.find(t => t.id === teamId);
+      if (teamInDb) updatedTeam = teamInDb;
+    }
+
+    const dateStr = new Date().toISOString();
+    const newNotification: NotificationItem = {
+      id: `not-${Date.now()}`,
+      title: `Round ${round} Evaluation Submitted`,
+      content: `Mentor ${mentorName} submitted evaluation for Team ${targetTeam.name}. Points earned: ${pointsEarned}.`,
+      type: 'mentor',
+      timestamp: dateStr,
+      read: false
+    };
+
+    return {
+      allTeams: updatedAllTeams,
+      team: updatedTeam,
+      notifications: [newNotification, ...state.notifications],
+      toasts: [...state.toasts, {
+        id: `toast-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+        title: `Evaluation Submitted`,
+        message: `Team ${targetTeam.name} earned ${pointsEarned} points in Round ${round}!`,
+        type: 'success'
+      }]
+    };
   })
 }));
+

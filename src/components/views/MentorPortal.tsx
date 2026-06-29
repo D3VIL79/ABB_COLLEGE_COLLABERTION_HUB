@@ -5,7 +5,7 @@ import { usePlatformStore, MentorRequest } from '@/store/usePlatformStore';
 import { 
   Users, MessageSquareCode, Calendar, CheckCircle2, ChevronRight, 
   Trash2, PhoneCall, Video, VideoOff, Mic, MicOff, Send, HelpCircle, Code, ShieldCheck,
-  TrendingUp, Award, Clock
+  TrendingUp, Award, Clock, Sliders, ClipboardCheck, ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -16,17 +16,31 @@ import {
 export function MentorPortal() {
   const { 
     activeTab, mentorRequests, assignMentor, resolveMentorRequest, 
-    addCalendarEvent, mentors, user, updateUserProfile, addToast 
+    addCalendarEvent, mentors, user, updateUserProfile, addToast,
+    allTeams, evaluationRound, submitMentorEvaluation
   } = usePlatformStore();
 
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
 
   // Mentor profile & settings states
-  const [firstName, setFirstName] = useState(user.firstName || 'Elena');
-  const [lastName, setLastName] = useState(user.lastName || 'Rostova');
-  const [email, setEmail] = useState(user.email || 'elena.rostova@abb.com');
+  const [firstName, setFirstName] = useState('Elena');
+  const [lastName, setLastName] = useState('Rostova');
+  const [email, setEmail] = useState('elena.rostova@abb.com');
   const [bio, setBio] = useState('Senior R&D Engineer at ABB Energy Systems. Specializes in microgrid simulations, smart distribution systems, and battery storage integration.');
   const [mentorStatus, setMentorStatus] = useState<'available' | 'busy'>('available');
+
+  useEffect(() => {
+    const isUserAMentor = mentors.some(m => m.name.toLowerCase() === `${user.firstName} ${user.lastName}`.toLowerCase());
+    if (isUserAMentor) {
+      setFirstName(user.firstName);
+      setLastName(user.lastName);
+      setEmail(user.email);
+    } else {
+      setFirstName('Elena');
+      setLastName('Rostova');
+      setEmail('elena.rostova@abb.com');
+    }
+  }, [user, mentors]);
 
   // Notification and alert preferences states
   const [emailAlerts, setEmailAlerts] = useState(true);
@@ -60,6 +74,82 @@ function balanceGridLoad(demandCurve, batteryCurves) {
   const [schedStart, setSchedStart] = useState('');
   const [schedDesc, setSchedDesc] = useState('');
   const [schedSuccess, setSchedSuccess] = useState(false);
+
+  // Team evaluation local states
+  const [evaluatingTeamId, setEvaluatingTeamId] = useState<string | null>(null);
+  const [slider1, setSlider1] = useState(80);
+  const [slider2, setSlider2] = useState(80);
+  const [slider3, setSlider3] = useState(80);
+  const [verifiedFeatures, setVerifiedFeatures] = useState<Record<string, boolean>>({});
+  const [evalComment, setEvalComment] = useState('');
+  const [progressSlider, setProgressSlider] = useState(65);
+
+  const evaluatingTeam = allTeams.find(t => t.id === evaluatingTeamId);
+
+  useEffect(() => {
+    if (evaluatingTeam) {
+      const existing = evaluatingTeam.mentorEvaluations?.find(e => e.round === evaluationRound);
+      if (existing) {
+        setSlider1(existing.scores[0]?.score ?? 80);
+        setSlider2(existing.scores[1]?.score ?? 80);
+        setSlider3(existing.scores[2]?.score ?? 80);
+        setEvalComment(existing.comment || '');
+        setProgressSlider(evaluatingTeam.progress || 15);
+        
+        const checklistMap: Record<string, boolean> = {};
+        existing.checklistRemarks.forEach(r => {
+          checklistMap[r.featureName] = r.implemented;
+        });
+        setVerifiedFeatures(checklistMap);
+      } else {
+        setSlider1(80);
+        setSlider2(80);
+        setSlider3(80);
+        setEvalComment('');
+        setProgressSlider(evaluatingTeam.progress || 15);
+        
+        const checklistMap: Record<string, boolean> = {};
+        (evaluatingTeam.proposedFeatures || []).forEach(f => {
+          checklistMap[f.name] = f.implemented;
+        });
+        setVerifiedFeatures(checklistMap);
+      }
+    }
+  }, [evaluatingTeamId, evaluationRound, allTeams, evaluatingTeam]);
+
+  const handleSubmitEvaluation = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!evaluatingTeamId || !evaluatingTeam) return;
+    
+    let criteriaNames = ['Score 1', 'Score 2', 'Score 3'];
+    if (evaluationRound === 1) {
+      criteriaNames = ['Core Idea & PPT', 'Feature Set Feasibility', 'Unique Value Proposition (USP)'];
+    } else if (evaluationRound === 2) {
+      criteriaNames = ['Functionality Quality', 'Code Architecture & Performance', 'Development Velocity'];
+    } else if (evaluationRound === 3) {
+      criteriaNames = ['UI/UX Appeal & Aesthetics', 'Integration & Final Polish', 'Presentation & Q&A Readiness'];
+    }
+    
+    const scores = [
+      { criteria: criteriaNames[0], score: slider1 },
+      { criteria: criteriaNames[1], score: slider2 },
+      { criteria: criteriaNames[2], score: slider3 }
+    ];
+    
+    const roundFeatures = (evaluatingTeam.proposedFeatures || []).filter(f => f.round === evaluationRound);
+    const checklistRemarks = roundFeatures.map(f => ({
+      featureName: f.name,
+      implemented: !!verifiedFeatures[f.name],
+      score: !!verifiedFeatures[f.name] ? 10 : 0
+    }));
+    
+    const isUserAMentor = mentors.some(m => m.name.toLowerCase() === `${user.firstName} ${user.lastName}`.toLowerCase());
+    const mentorFullName = isUserAMentor ? `${user.firstName} ${user.lastName}` : 'Elena Rostova';
+    
+    submitMentorEvaluation(evaluatingTeamId, evaluationRound, mentorFullName, scores, checklistRemarks, evalComment, progressSlider);
+    addToast('Evaluation Submitted', `Successfully graded Team ${evaluatingTeam.name} for Round ${evaluationRound}`, 'success');
+    setEvaluatingTeamId(null);
+  };
 
   // Call timer effect
   useEffect(() => {
@@ -343,65 +433,322 @@ function balanceGridLoad(demandCurve, batteryCurves) {
         </div>
       )}
 
-      {/* B. WORKSHOP SCHEDULER */}
-      {activeTab === 'dashboard' && (
-        <div className="p-4 sm:p-6 lg:p-8 border-t border-border/20 bg-muted/5">
-          <div className="max-w-xl">
-            <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2 mb-4">
-              <Calendar className="w-4.5 h-4.5 text-primary" />
-              Schedule Event Workshop Slot
-            </h3>
-            
-            <form onSubmit={handleScheduleWorkshop} className="space-y-4 bg-card p-5 rounded-2xl border border-border/40 shadow-sm">
-              {schedSuccess && (
-                <div className="p-3.5 rounded-xl border border-success/30 bg-success/5 text-success text-xs font-semibold flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Workshop successfully scheduled and linked to student calendars!
-                </div>
-              )}
+      {/* B. MENTOR HUB DASHBOARD & EVALUATION BOARD */}
+      {activeTab === 'dashboard' && (() => {
+        const isUserAMentor = mentors.some(m => m.name.toLowerCase() === `${user.firstName} ${user.lastName}`.toLowerCase());
+        const mentorFullName = isUserAMentor ? `${user.firstName} ${user.lastName}` : 'Elena Rostova';
+        const searchLastName = isUserAMentor ? user.lastName : 'Rostova';
+        const myAssignedTeams = allTeams.filter(t => 
+          t.assignedMentorName === mentorFullName ||
+          t.assignedMentorName?.toLowerCase().includes(searchLastName.toLowerCase())
+        );
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Seminar Title *</label>
-                  <input
-                    value={schedTitle}
-                    onChange={(e) => setSchedTitle(e.target.value)}
-                    placeholder="e.g. ROS pathfinding tips"
-                    className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Date Selector *</label>
-                  <input
-                    type="date"
-                    value={schedStart}
-                    onChange={(e) => setSchedStart(e.target.value)}
-                    className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50"
-                  />
-                </div>
+        return (
+          <div className="p-4 sm:p-6 lg:p-8 space-y-6 text-left">
+            <div>
+              <span className="text-[10px] font-black uppercase text-primary tracking-widest">
+                Overview
+              </span>
+              <h2 className="text-xl font-black text-foreground mt-0.5">
+                Mentor Command Dashboard
+              </h2>
+              <p className="text-[11px] text-muted-foreground mt-1 leading-normal font-sans">
+                Monitor your assigned teams, perform interval round evaluations, and schedule workshops.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left 2 Columns: Assigned Teams / Evaluation Panel */}
+              <div className="lg:col-span-2 space-y-6">
+                
+                {/* Team Evaluation Board (Conditional Panel) */}
+                {evaluatingTeamId && evaluatingTeam ? (
+                  <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 space-y-5 shadow-lg shadow-primary/5">
+                    <div className="flex items-center justify-between border-b border-border/20 pb-3">
+                      <div>
+                        <span className="text-[9px] font-black uppercase text-primary tracking-wider bg-primary/10 px-2 py-0.5 rounded border border-primary/20">Active Evaluation</span>
+                        <h3 className="text-sm font-extrabold text-foreground mt-1 flex items-center gap-1.5">
+                          <span>Grading: {evaluatingTeam.name}</span>
+                          <span className="text-xs font-sans text-muted-foreground">({evaluatingTeam.college})</span>
+                        </h3>
+                      </div>
+                      <button 
+                        onClick={() => setEvaluatingTeamId(null)}
+                        className="text-xs font-bold text-muted-foreground hover:text-foreground cursor-pointer flex items-center gap-1"
+                      >
+                        <ChevronLeft className="w-4 h-4" /> Back to roster
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleSubmitEvaluation} className="space-y-5">
+                      <div className="p-3.5 rounded-xl border border-border/30 bg-background/50 flex items-center justify-between gap-4">
+                        <div>
+                          <div className="text-xs font-bold text-foreground">Current Event Interval</div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5">Evaluation parameters update dynamically.</div>
+                        </div>
+                        <div className="px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-black uppercase tracking-wider font-mono">
+                          Round {evaluationRound}
+                        </div>
+                      </div>
+
+                      {/* Criteria sliders */}
+                      <div className="space-y-4">
+                        <h4 className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Evaluation Sliders (0 - 100)</h4>
+                        
+                        {(() => {
+                          let label1 = 'Idea & Originality';
+                          let label2 = 'Feasibility';
+                          let label3 = 'USP & Pitch';
+                          
+                          if (evaluationRound === 2) {
+                            label1 = 'Functionality Quality';
+                            label2 = 'Code & Performance';
+                            label3 = 'Development Velocity';
+                          } else if (evaluationRound === 3) {
+                            label1 = 'UI/UX Appeal';
+                            label2 = 'Integration & Polish';
+                            label3 = 'Presentation & Q&A';
+                          }
+                          
+                          return (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="p-3 rounded-xl border border-border/25 bg-background space-y-2">
+                                <div className="flex justify-between text-[11px] font-bold text-foreground">
+                                  <span>{label1}</span>
+                                  <span className="text-primary font-mono">{slider1}</span>
+                                </div>
+                                <input type="range" min="0" max="100" value={slider1} onChange={e => setSlider1(Number(e.target.value))} className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-primary" />
+                              </div>
+
+                              <div className="p-3 rounded-xl border border-border/25 bg-background space-y-2">
+                                <div className="flex justify-between text-[11px] font-bold text-foreground">
+                                  <span>{label2}</span>
+                                  <span className="text-primary font-mono">{slider2}</span>
+                                </div>
+                                <input type="range" min="0" max="100" value={slider2} onChange={e => setSlider2(Number(e.target.value))} className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-primary" />
+                              </div>
+
+                              <div className="p-3 rounded-xl border border-border/25 bg-background space-y-2">
+                                <div className="flex justify-between text-[11px] font-bold text-foreground">
+                                  <span>{label3}</span>
+                                  <span className="text-primary font-mono">{slider3}</span>
+                                </div>
+                                <input type="range" min="0" max="100" value={slider3} onChange={e => setSlider3(Number(e.target.value))} className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-primary" />
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Team Progress Adjuster */}
+                      <div className="space-y-3">
+                        <h4 className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Overall Team Progress</h4>
+                        <div className="p-3 rounded-xl border border-border/25 bg-background space-y-2">
+                          <div className="flex justify-between text-[11px] font-bold text-foreground">
+                            <span>Adjust Team Progress Status</span>
+                            <span className="text-primary font-mono">{progressSlider}%</span>
+                          </div>
+                          <input 
+                            type="range" 
+                            min="0" 
+                            max="100" 
+                            value={progressSlider} 
+                            onChange={e => setProgressSlider(Number(e.target.value))} 
+                            className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-primary" 
+                          />
+                          <p className="text-[9px] text-muted-foreground font-medium italic leading-normal mt-1">
+                            Setting this progress updates the team's dashboard metrics and milestone velocity.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Checklist Remarks */}
+                      <div className="space-y-3">
+                        <h4 className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Features Verification Checklist (Round {evaluationRound})</h4>
+                        {(() => {
+                          const roundFeatures = (evaluatingTeam.proposedFeatures || []).filter(f => f.round === evaluationRound);
+                          if (roundFeatures.length === 0) {
+                            return (
+                              <div className="text-[10px] text-muted-foreground bg-background p-3.5 rounded-xl border border-dashed border-border/60 italic text-center">
+                                No proposed features submitted by student team for verification in Round {evaluationRound}.
+                              </div>
+                            );
+                          }
+                          return (
+                            <div className="space-y-2">
+                              {roundFeatures.map(f => (
+                                <label key={f.id} className="flex items-start gap-3 p-3 rounded-xl border border-border/25 bg-background hover:bg-muted/10 transition-colors cursor-pointer text-left font-sans font-semibold">
+                                  <input 
+                                    type="checkbox"
+                                    checked={!!verifiedFeatures[f.name]}
+                                    onChange={e => {
+                                      setVerifiedFeatures(prev => ({
+                                        ...prev,
+                                        [f.name]: e.target.checked
+                                      }));
+                                    }}
+                                    className="mt-0.5 w-4 h-4 rounded border-border/40 text-primary focus:ring-primary/20 cursor-pointer"
+                                  />
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                      <span>{f.name}</span>
+                                      <span className="text-[8px] font-bold px-1 rounded border border-border/40 text-muted-foreground uppercase shrink-0">Round {f.round}</span>
+                                    </div>
+                                    <div className="text-[10px] text-muted-foreground leading-normal mt-0.5 font-sans font-medium break-words">{f.description}</div>
+                                  </div>
+                                </label>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Comments */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Mentor suggestions & remarks *</label>
+                        <textarea 
+                          value={evalComment}
+                          onChange={e => setEvalComment(e.target.value)}
+                          rows={3} 
+                          placeholder="Provide constructive feedback, architectural recommendations, and next-round improvement goals..." 
+                          className="w-full text-xs font-semibold p-2.5 rounded-xl border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 resize-none"
+                          required
+                        />
+                      </div>
+
+                      <div className="flex gap-3 justify-end pt-2">
+                        <button 
+                          type="button"
+                          onClick={() => setEvaluatingTeamId(null)}
+                          className="px-5 py-2.5 rounded-xl border border-border/40 text-muted-foreground hover:text-foreground text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          type="submit"
+                          className="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-primary/10"
+                        >
+                          Submit Round {evaluationRound} Evaluation
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                ) : (
+                  /* My Assigned Teams List Roster */
+                  <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4">
+                    <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+                      <Users className="w-4.5 h-4.5 text-primary" />
+                      <span>My Assigned Teams ({myAssignedTeams.length})</span>
+                    </h3>
+
+                    <div className="divide-y divide-border/25">
+                      {myAssignedTeams.map((t) => (
+                        <div key={t.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 first:pt-0 last:pb-0 text-left">
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                              <span>{t.name}</span>
+                              <span className="text-[9px] font-mono bg-muted px-2 py-0.5 rounded border border-border/40 text-muted-foreground shrink-0 uppercase tracking-wide">{t.track}</span>
+                            </h4>
+                            <div className="text-[10px] text-muted-foreground mt-0.5 leading-normal font-sans truncate max-w-sm">{t.college}</div>
+                            
+                            {/* Badges List */}
+                            {t.badges && t.badges.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {t.badges.map(badge => (
+                                  <span key={badge} className="text-[8px] font-bold px-1.5 py-0.5 rounded-full border border-primary/20 text-primary bg-primary/5 uppercase shrink-0">
+                                    {badge}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0 border-t border-border/10 sm:border-t-0 pt-2 sm:pt-0">
+                            <div className="text-right">
+                              <span className="text-[9px] font-bold text-muted-foreground uppercase block">Progress</span>
+                              <span className="text-xs font-bold text-foreground">{t.progress}%</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[9px] font-bold text-muted-foreground uppercase block">Total Points</span>
+                              <span className="text-xs font-extrabold text-primary font-mono">{t.points || 0} pts</span>
+                            </div>
+                            <button 
+                              onClick={() => setEvaluatingTeamId(t.id)}
+                              className="px-3.5 py-2 rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 transition-all font-bold text-xs uppercase cursor-pointer"
+                            >
+                              Evaluate
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      {myAssignedTeams.length === 0 && (
+                        <div className="text-center py-10 text-muted-foreground font-sans text-xs italic">
+                          No teams assigned to you at the moment. Admin will assign teams soon.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Workshop Description</label>
-                <textarea
-                  value={schedDesc}
-                  onChange={(e) => setSchedDesc(e.target.value)}
-                  rows={2}
-                  placeholder="Enter details about materials and recommended prep..."
-                  className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 resize-none"
-                />
-              </div>
+              {/* Right Column: Workshop Scheduler */}
+              <div className="space-y-6">
+                <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4">
+                  <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+                    <Calendar className="w-4.5 h-4.5 text-primary" />
+                    <span>Schedule Workshop Slot</span>
+                  </h3>
+                  
+                  <form onSubmit={handleScheduleWorkshop} className="space-y-4">
+                    {schedSuccess && (
+                      <div className="p-3 rounded-lg border border-success/30 bg-success/5 text-success text-xs font-semibold flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>Workshop scheduled successfully!</span>
+                      </div>
+                    )}
 
-              <button
-                type="submit"
-                className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider shadow-md cursor-pointer"
-              >
-                Schedule Session
-              </button>
-            </form>
+                    <div>
+                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Seminar Title *</label>
+                      <input
+                        value={schedTitle}
+                        onChange={(e) => setSchedTitle(e.target.value)}
+                        placeholder="e.g. ROS pathfinding tips"
+                        className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 animate-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Date Selector *</label>
+                      <input
+                        type="date"
+                        value={schedStart}
+                        onChange={(e) => setSchedStart(e.target.value)}
+                        className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 animate-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Workshop Description</label>
+                      <textarea
+                        value={schedDesc}
+                        onChange={(e) => setSchedDesc(e.target.value)}
+                        rows={2}
+                        placeholder="Enter details about materials and recommended prep..."
+                        className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 resize-none"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider shadow-md cursor-pointer"
+                    >
+                      Schedule Session
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* C. MENTOR ANALYTICS / MY IMPACT */}
       {activeTab === 'analytics' && (() => {

@@ -2,27 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import { usePlatformStore, TeamMember, Challenge, Team } from '@/store/usePlatformStore';
-import { 
-  Users, BookOpen, FileBadge, Calendar, Compass, ShieldAlert, 
-  Trash2, Mail, Link as LinkIcon, QrCode, CheckCircle2, ChevronRight, 
+import {
+  Users, BookOpen, FileBadge, Calendar, Compass, ShieldAlert,
+  Trash2, Mail, Link as LinkIcon, QrCode, CheckCircle2, ChevronRight,
   Bookmark, Download, ExternalLink, Settings, ShieldCheck, HelpCircle,
-  Trophy, MapPin, Activity, Check, Cpu, Clock, ChevronLeft
+  Trophy, MapPin, Activity, Check, Cpu, Clock, ChevronLeft, Award, CheckSquare, Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function StudentPortal() {
-  const { 
-    activeTab, team, challenges, toggleChallengeBookmark, 
+  const {
+    activeTab, team, challenges, toggleChallengeBookmark,
     inviteMember, removeMember, submitProject, requestMentor,
     calendarEvents, notifications, user, updateUserProfile, selectedChallengeId, setSelectedChallengeId, setTab, allTeams,
-    countdownDate, phases, activePhaseIndex, addToast
+    countdownDate, phases, activePhaseIndex, addToast,
+    evaluationRound, updateProposedFeatures
   } = usePlatformStore();
 
   // Countdown to July 10, 2026 (Phase 2 Ends)
   const [timeLeft, setTimeLeft] = useState({ days: 21, hours: 6, minutes: 30, seconds: 45 });
   useEffect(() => {
     const target = new Date(countdownDate).getTime();
-    
+
     function tick() {
       const now = Date.now();
       const diff = Math.max(0, target - now);
@@ -81,10 +82,37 @@ export function StudentPortal() {
     }
   };
 
+  useEffect(() => {
+    if (team && team.submissions && team.submissions.length > 0) {
+      const latest = team.submissions[team.submissions.length - 1];
+      setGithubUrl(latest.githubUrl || '');
+      setDemoUrl(latest.demoUrl || '');
+      setSubDesc(latest.description || '');
+      setPresentationFile(latest.presentationFile || '');
+    }
+  }, [team]);
+
   // Submission handler
   const handleSubmitProject = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!githubUrl || !demoUrl || !subDesc || !presentationFile) return;
+
+    if (evaluationRound === 1) {
+      if (!presentationFile || !subDesc) {
+        addToast('Validation Error', 'Presentation deck and summary are required for Round 1.', 'error');
+        return;
+      }
+    } else if (evaluationRound === 2) {
+      if (!githubUrl || !subDesc) {
+        addToast('Validation Error', 'GitHub repository link and summary are required for Round 2.', 'error');
+        return;
+      }
+    } else if (evaluationRound === 3) {
+      if (!githubUrl || !demoUrl || !subDesc) {
+        addToast('Validation Error', 'GitHub repo, Live Demo URL, and summary are required for Round 3.', 'error');
+        return;
+      }
+    }
+
     submitProject(githubUrl, demoUrl, subDesc, presentationFile);
     setIsSubmitted(true);
     setTimeout(() => setIsSubmitted(false), 4000);
@@ -108,10 +136,10 @@ export function StudentPortal() {
       {activeTab === 'dashboard' && (
         <div className="p-4 sm:p-6 lg:p-8 space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
+
             {/* LEFT COLUMN (lg:col-span-5) */}
             <div className="lg:col-span-5 space-y-6 flex flex-col">
-              
+
               {/* Widget 1: COUNTDOWN TO DEADLINE */}
               <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between">
                 <div>
@@ -268,7 +296,7 @@ export function StudentPortal() {
 
             {/* RIGHT COLUMN (lg:col-span-7) */}
             <div className="lg:col-span-7 space-y-6 flex flex-col">
-              
+
               {/* Widget 4: UPCOMING DEADLINES */}
               <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
@@ -301,7 +329,7 @@ export function StudentPortal() {
                   <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.02] flex flex-col justify-between h-24 relative overflow-hidden">
                     <div>
                       <span className="text-[10px] font-bold text-white leading-snug block truncate">Architecture Review</span>
-                      <span className="text-[9px] text-primary font-bold block mt-1">25th June</span>
+                      <span className="text-[9px] text-primary font-bold block mt-1">25th July</span>
                     </div>
                     <div className="absolute right-2.5 bottom-2.5 text-primary/20 shrink-0">
                       <Cpu className="w-6 h-6" />
@@ -353,11 +381,11 @@ export function StudentPortal() {
                             {activePhase.description}
                           </span>
                         </div>
-                        
+
                         <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                           <div className="h-full bg-primary animate-pulse" style={{ width: `${pct}%` }} />
                         </div>
-                        
+
                         <p className="text-[10px] text-muted-foreground leading-normal font-sans pt-1">
                           Phase {activePhaseIndex + 1} of {phases.length} ({pct}% through program)
                         </p>
@@ -369,10 +397,10 @@ export function StudentPortal() {
                           {/* Isometric Grid lines */}
                           <path d="M 20 60 L 100 20 L 180 60 L 100 100 Z" fill="none" stroke="rgba(255,0,15,0.08)" strokeWidth="1" />
                           <path d="M 60 40 L 140 80 M 60 80 L 140 40" fill="none" stroke="rgba(255,0,15,0.05)" strokeWidth="1" />
-                          
+
                           {/* Connected node lines */}
                           <path d="M 80 65 L 110 50 L 140 65 M 110 50 L 110 80" fill="none" stroke="#FF000F" strokeWidth="1.2" opacity="0.5" strokeDasharray="2 2" />
-                          
+
                           {/* Block 1 (Left) */}
                           <g transform="translate(60, 50)">
                             <path d="M 0 10 L 15 2 L 30 10 L 15 18 Z" fill="rgba(255,0,15,0.1)" stroke="#FF000F" strokeWidth="1" />
@@ -508,15 +536,14 @@ export function StudentPortal() {
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${
-                            member.role === 'Leader' 
-                              ? 'border-primary/30 text-primary bg-primary/5' 
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${member.role === 'Leader'
+                              ? 'border-primary/30 text-primary bg-primary/5'
                               : 'border-border/30 text-muted-foreground bg-background'
-                          }`}>
+                            }`}>
                             {member.role}
                           </span>
                           {member.id !== 'm-leader' && (
-                            <button 
+                            <button
                               onClick={() => removeMember(member.id)}
                               className="p-1.5 rounded-lg border border-border/30 text-muted-foreground hover:text-danger hover:border-danger/20 hover:bg-danger/5 transition-colors cursor-pointer"
                             >
@@ -597,62 +624,277 @@ export function StudentPortal() {
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* Project Features & Implementation Checklist */}
+                <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 text-left">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+                      <CheckSquare className="w-4 h-4 text-primary" />
+                      <span>Project Features & Implementation</span>
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary uppercase">
+                      Round {evaluationRound}
+                    </span>
+                  </div>
+
+                  {(() => {
+                    const features = team.proposedFeatures || [];
+                    const total = features.length;
+                    const implemented = features.filter(f => f.implemented).length;
+                    const percent = total > 0 ? Math.round((implemented / total) * 100) : 0;
+
+                    return (
+                      <div className="p-4 rounded-xl border border-border/30 bg-muted/15 flex items-center justify-between gap-4">
+                        <div>
+                          <h4 className="text-xs font-bold text-foreground">Implementation Progress</h4>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
+                            {implemented} of {total} proposed features verified as implemented.
+                          </p>
+                        </div>
+                        <div className="relative w-12 h-12 shrink-0 flex items-center justify-center">
+                          <svg className="w-full h-full transform -rotate-90">
+                            <circle cx="24" cy="24" r="20" className="stroke-muted/30" strokeWidth="4" fill="transparent" />
+                            <circle cx="24" cy="24" r="20" className="stroke-primary transition-all duration-500" strokeWidth="4" fill="transparent"
+                              strokeDasharray={2 * Math.PI * 20}
+                              strokeDashoffset={2 * Math.PI * 20 * (1 - percent / 100)} />
+                          </svg>
+                          <span className="absolute text-[10px] font-black text-foreground">{percent}%</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  <div className="space-y-2">
+                    <div className="text-[10px] uppercase font-bold text-muted-foreground">Proposed Features Checklist</div>
+                    {!team.proposedFeatures || team.proposedFeatures.length === 0 ? (
+                      <div className="text-[11px] text-muted-foreground font-medium py-3 text-center border border-dashed border-border/60 rounded-xl italic">
+                        No features listed yet. Add features below for Round {evaluationRound} evaluation.
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                        {team.proposedFeatures.map((feature) => (
+                          <div key={feature.id} className="flex items-start justify-between p-2.5 rounded-lg border border-border/25 bg-background gap-3">
+                            <div className="flex items-start gap-2.5 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={feature.implemented}
+                                disabled={evaluationRound === 1}
+                                onChange={(e) => {
+                                  const updated = (team.proposedFeatures || []).map(f =>
+                                    f.id === feature.id ? { ...f, implemented: e.target.checked } : f
+                                  );
+                                  updateProposedFeatures(team.id, updated);
+                                }}
+                                className="mt-0.5 w-3.5 h-3.5 rounded border-border/40 text-primary focus:ring-primary/20 cursor-pointer disabled:cursor-not-allowed"
+                              />
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                  <span className="truncate">{feature.name}</span>
+                                  <span className="text-[8px] font-bold px-1 rounded border border-border/40 text-muted-foreground uppercase shrink-0">R{feature.round}</span>
+                                </div>
+                                <div className="text-[10px] text-muted-foreground leading-normal mt-0.5 font-sans break-words">{feature.description}</div>
+                              </div>
+                            </div>
+
+                            {evaluationRound === 1 && (
+                              <button
+                                onClick={() => {
+                                  const updated = (team.proposedFeatures || []).filter(f => f.id !== feature.id);
+                                  updateProposedFeatures(team.id, updated);
+                                }}
+                                className="p-1 rounded text-muted-foreground hover:text-danger hover:bg-danger/5 transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {evaluationRound === 1 && (
+                    <div className="pt-3 border-t border-border/15 space-y-3">
+                      <div className="text-[10px] uppercase font-bold text-muted-foreground">Add Proposed Feature</div>
+                      <div className="grid grid-cols-1 gap-2">
+                        <input
+                          id="new-feature-name"
+                          placeholder="Feature Name (e.g. Smart Load Balancer)"
+                          className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50"
+                        />
+                        <input
+                          id="new-feature-desc"
+                          placeholder="Brief description of what it does..."
+                          className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50"
+                        />
+                        <button
+                          onClick={() => {
+                            const nameEl = document.getElementById('new-feature-name') as HTMLInputElement;
+                            const descEl = document.getElementById('new-feature-desc') as HTMLInputElement;
+                            if (nameEl && descEl && nameEl.value.trim() && descEl.value.trim()) {
+                              const newFeature = {
+                                id: `f-${Date.now()}`,
+                                name: nameEl.value.trim(),
+                                description: descEl.value.trim(),
+                                implemented: false,
+                                round: 1
+                              };
+                              const updated = [...(team.proposedFeatures || []), newFeature];
+                              updateProposedFeatures(team.id, updated);
+                              nameEl.value = '';
+                              descEl.value = '';
+                            }
+                          }}
+                          className="w-full py-2 rounded-lg border border-primary/30 hover:border-primary/50 bg-primary/5 hover:bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                        >
+                          Propose Feature
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Submissions & Mentor request widget (1 column) */}
               <div className="space-y-6">
-                {/* Project Submission Form */}
-                <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4">
-                  <h3 className="text-sm font-extrabold text-foreground">Project Submission</h3>
-                  
-                  {team.submissions.length > 0 ? (
-                    <div className="p-4 rounded-xl border border-success/30 bg-success/5 space-y-3">
-                      <div className="text-xs font-bold text-success flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4.5 h-4.5" /> Project Received
+                {/* Team Status & Achievements */}
+                <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 text-left">
+                  <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+                    <Award className="w-4 h-4 text-primary" />
+                    <span>Team Status & Achievements</span>
+                  </h3>
+
+                  {/* Mentor Card */}
+                  <div className="p-3.5 rounded-xl border border-border/30 bg-muted/15 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                      <Users className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[10px] uppercase font-bold text-muted-foreground">Assigned Mentor</div>
+                      <div className="text-xs font-bold text-foreground truncate">
+                        {team.assignedMentorName || "Pending Assignment"}
                       </div>
-                      <p className="text-[10px] text-muted-foreground leading-relaxed font-sans">
-                        Your submission has been cataloged. You can check the Judge tab once review cycles conclude.
-                      </p>
-                      <div className="pt-2 border-t border-success/20 text-[10px] text-muted-foreground space-y-1 text-left">
-                        <div className="truncate"><span className="font-bold text-foreground">Repo:</span> {team.submissions[0].githubUrl}</div>
-                        <div className="truncate"><span className="font-bold text-foreground">Demo:</span> {team.submissions[0].demoUrl}</div>
-                        <div className="truncate"><span className="font-bold text-foreground">Deck:</span> {team.submissions[0].presentationFile}</div>
+                      <div className="text-[9px] text-muted-foreground mt-0.5">
+                        {team.assignedMentorName ? "Available for guidance & review" : "Admin will assign a mentor shortly"}
                       </div>
                     </div>
-                  ) : (
-                    <form onSubmit={handleSubmitProject} className="space-y-4">
-                      {isSubmitted && (
-                        <div className="p-3 rounded-lg border border-success/30 bg-success/5 text-success text-xs font-semibold">
-                          Submission successfully uploaded!
-                        </div>
-                      )}
-                      <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1 text-left">GitHub Repo *</label>
-                        <input value={githubUrl} onChange={e => setGithubUrl(e.target.value)} placeholder="https://github.com/..." className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" />
+                  </div>
+
+                  {/* Badges List */}
+                  <div className="space-y-2">
+                    <div className="text-[10px] uppercase font-bold text-muted-foreground">Earned Badges</div>
+                    {!team.badges || team.badges.length === 0 ? (
+                      <div className="text-[10px] text-muted-foreground font-medium py-1 italic">
+                        No badges earned yet. Complete evaluation rounds to unlock.
                       </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1 text-left">Demo link *</label>
-                        <input value={demoUrl} onChange={e => setDemoUrl(e.target.value)} placeholder="https://..." className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" />
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {team.badges.map((badge) => {
+                          const badgeDetails: Record<string, { desc: string; color: string; icon: string }> = {
+                            "Pitch Master": { desc: "Outstanding Round 1 pitch & idea", color: "border-yellow-500/30 text-yellow-400 bg-yellow-950/20", icon: "⭐" },
+                            "MVP Builder": { desc: "Implemented 3+ features in MVP stage", color: "border-blue-500/30 text-blue-400 bg-blue-950/20", icon: "🚀" },
+                            "UIUX Wizard": { desc: "Exceptional UI/UX & aesthetics in Round 3", color: "border-purple-500/30 text-purple-400 bg-purple-950/20", icon: "🎨" },
+                            "Stellar Growth": { desc: "Improved by 40+ points in Round 2", color: "border-green-500/30 text-green-400 bg-green-950/20", icon: "📈" },
+                            "Overachiever": { desc: "Earned 250+ points across rounds", color: "border-red-500/30 text-red-400 bg-red-950/20", icon: "👑" }
+                          };
+                          const detail = badgeDetails[badge] || { desc: "Achievement Badge", color: "border-primary/20 text-primary bg-primary/5", icon: "🏅" };
+                          return (
+                            <div
+                              key={badge}
+                              title={detail.desc}
+                              className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-bold ${detail.color} transition-all hover:scale-105 cursor-help`}
+                            >
+                              <span>{detail.icon}</span>
+                              <span>{badge}</span>
+                            </div>
+                          );
+                        })}
                       </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Project Submission Form */}
+                <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 text-left">
+                  <h3 className="text-sm font-extrabold text-foreground flex items-center justify-between">
+                    <span>Project Submission</span>
+                    <span className="text-[10px] font-bold text-primary px-1.5 py-0.5 rounded bg-primary/5 border border-primary/20 font-mono">Round {evaluationRound}</span>
+                  </h3>
+
+                  {/* Latest Submission Summary */}
+                  {(() => {
+                    const latest = team.submissions && team.submissions.length > 0 ? team.submissions[team.submissions.length - 1] : null;
+                    return (
+                      <div className="p-3 rounded-lg border border-border/40 bg-muted/10 text-left space-y-1">
+                        <div className="text-[10px] font-bold uppercase text-muted-foreground">Active Deliverables</div>
+                        {latest ? (
+                          <div className="space-y-1 text-[10px] text-foreground font-sans">
+                            {latest.presentationFile && <div className="truncate"><span className="text-muted-foreground font-semibold">Pitch Deck:</span> {latest.presentationFile}</div>}
+                            {latest.githubUrl && <div className="truncate"><span className="text-muted-foreground font-semibold">GitHub:</span> {latest.githubUrl}</div>}
+                            {latest.demoUrl && <div className="truncate"><span className="text-muted-foreground font-semibold">Demo URL:</span> {latest.demoUrl}</div>}
+                          </div>
+                        ) : (
+                          <div className="text-[10px] text-muted-foreground italic">No submissions uploaded yet.</div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  <form onSubmit={handleSubmitProject} className="space-y-4">
+                    {isSubmitted && (
+                      <div className="p-3 rounded-lg border border-success/30 bg-success/5 text-success text-xs font-semibold">
+                        Submission successfully uploaded for Round {evaluationRound}!
+                      </div>
+                    )}
+
+                    {evaluationRound === 1 && (
                       <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1 text-left">Presentation File Name *</label>
+                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Presentation File Name *</label>
                         <input value={presentationFile} onChange={e => setPresentationFile(e.target.value)} placeholder="team_deck.pdf" className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" />
                       </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1 text-left">System summary *</label>
-                        <textarea value={subDesc} onChange={e => setSubDesc(e.target.value)} rows={3} placeholder="Briefly describe what your algorithm does..." className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 resize-none" />
-                      </div>
-                      <button type="submit" className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider cursor-pointer shadow-md">
-                        Submit Deliverables
-                      </button>
-                    </form>
-                  )}
+                    )}
+
+                    {evaluationRound === 2 && (
+                      <>
+                        <div>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">GitHub Repo *</label>
+                          <input value={githubUrl} onChange={e => setGithubUrl(e.target.value)} placeholder="https://github.com/..." className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Presentation File Name (Optional)</label>
+                          <input value={presentationFile} onChange={e => setPresentationFile(e.target.value)} placeholder="team_deck.pdf" className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" />
+                        </div>
+                      </>
+                    )}
+
+                    {evaluationRound === 3 && (
+                      <>
+                        <div>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Live Demo Link *</label>
+                          <input value={demoUrl} onChange={e => setDemoUrl(e.target.value)} placeholder="https://..." className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">GitHub Repo URL *</label>
+                          <input value={githubUrl} onChange={e => setGithubUrl(e.target.value)} placeholder="https://github.com/..." className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" />
+                        </div>
+                      </>
+                    )}
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">System summary & description *</label>
+                      <textarea value={subDesc} onChange={e => setSubDesc(e.target.value)} rows={3} placeholder="Briefly describe what your algorithm does..." className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 resize-none" />
+                    </div>
+
+                    <button type="submit" className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider cursor-pointer shadow-md">
+                      Submit Round {evaluationRound} Deliverables
+                    </button>
+                  </form>
                 </div>
 
                 {/* Help Request ticket */}
-                <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4">
+                <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 text-left">
                   <h3 className="text-sm font-extrabold text-foreground">Request Technical Mentor</h3>
-                  
+
                   <form onSubmit={handleMentorRequest} className="space-y-4">
                     {mentorRequestedSuccess && (
                       <div className="p-3 rounded-lg border border-success/30 bg-success/5 text-success text-xs font-semibold">
@@ -661,10 +903,10 @@ export function StudentPortal() {
                     )}
                     <div>
                       <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Help Category *</label>
-                      <select 
-                        value={mentorReqType} 
+                      <select
+                        value={mentorReqType}
                         onChange={e => setMentorReqType(e.target.value as any)}
-                        className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50"
+                        className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 animate-none"
                       >
                         <option>Technical</option>
                         <option>Design</option>
@@ -676,10 +918,10 @@ export function StudentPortal() {
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Priority level *</label>
-                      <select 
-                        value={mentorPriority} 
+                      <select
+                        value={mentorPriority}
                         onChange={e => setMentorPriority(e.target.value as any)}
-                        className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50"
+                        className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 animate-none"
                       >
                         <option>Low</option>
                         <option>Medium</option>
@@ -721,14 +963,13 @@ export function StudentPortal() {
             {/* Explorer list */}
             <div className="lg:col-span-2 space-y-4">
               {challenges.map((ch) => (
-                <div 
-                  key={ch.id} 
+                <div
+                  key={ch.id}
                   onClick={() => setSelectedChallengeId(ch.id)}
-                  className={`p-5 rounded-2xl border text-left transition-all duration-300 cursor-pointer relative ${
-                    selectedChallengeId === ch.id 
-                      ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' 
+                  className={`p-5 rounded-2xl border text-left transition-all duration-300 cursor-pointer relative ${selectedChallengeId === ch.id
+                      ? 'border-primary bg-primary/5 shadow-md shadow-primary/5'
                       : 'border-border/40 bg-card hover:border-border hover:shadow-sm'
-                  }`}
+                    }`}
                 >
                   <div className="flex justify-between items-center gap-4">
                     <span className="px-2.5 py-1 rounded bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider">
@@ -738,13 +979,12 @@ export function StudentPortal() {
                       <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded border">
                         {ch.difficulty}
                       </span>
-                      <button 
+                      <button
                         onClick={() => toggleChallengeBookmark(ch.id)}
-                        className={`p-1 rounded-lg border transition-colors ${
-                          ch.bookmarked 
-                            ? 'border-primary/30 bg-primary/10 text-primary' 
+                        className={`p-1 rounded-lg border transition-colors ${ch.bookmarked
+                            ? 'border-primary/30 bg-primary/10 text-primary'
                             : 'border-border/30 text-muted-foreground hover:text-foreground'
-                        }`}
+                          }`}
                       >
                         <Bookmark className="w-3.5 h-3.5 fill-current" />
                       </button>
@@ -776,7 +1016,7 @@ export function StudentPortal() {
               {selectedChallenge ? (
                 <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-5 shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
-                  
+
                   <div>
                     <span className="text-[9px] font-black uppercase text-primary tracking-widest">
                       {selectedChallenge.track}
@@ -806,9 +1046,9 @@ export function StudentPortal() {
                     <div className="text-xs font-bold text-foreground">Download Resources</div>
                     <div className="space-y-2">
                       {selectedChallenge.resources.map((res, idx) => (
-                        <a 
-                          key={idx} 
-                          href="#" 
+                        <a
+                          key={idx}
+                          href="#"
                           className="flex items-center justify-between p-2 rounded-lg border border-border/30 bg-muted/10 hover:bg-muted/20 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-all"
                         >
                           <span className="truncate">{res.name}</span>
@@ -845,12 +1085,12 @@ export function StudentPortal() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              { type: 'participation', title: 'ABB Innovation Program Certification', date: 'June 25, 2026', hash: 'SHA256-ABB-89240182A9BC' },
-              { type: 'achievement', title: 'Smart Grid Hackathon Placement Certificate', date: 'June 25, 2026', hash: 'SHA256-ABB-109482098BC1' },
+              { type: 'participation', title: 'ABB Innovation Program Certification', date: 'July 25, 2026', hash: 'SHA256-ABB-89240182A9BC' },
+              { type: 'achievement', title: 'Smart Grid Hackathon Placement Certificate', date: 'July 25, 2026', hash: 'SHA256-ABB-109482098BC1' },
             ].map((cert, idx) => (
               <div key={idx} className="rounded-2xl border border-border/40 bg-card p-6 shadow-sm space-y-6 relative overflow-hidden flex flex-col justify-between">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
-                
+
                 <div>
                   <div className="flex items-center justify-between gap-4">
                     <span className="px-2.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-[9px] font-bold uppercase tracking-wider">
@@ -901,16 +1141,30 @@ export function StudentPortal() {
         };
 
         const sortedRankedTeams = [...allTeams].sort((a, b) => {
-          const aScore = a.submissions[0]?.score || 0;
-          const bScore = b.submissions[0]?.score || 0;
-          if (bScore !== aScore) return bScore - aScore;
+          const aPts = a.points || 0;
+          const bPts = b.points || 0;
+          if (bPts !== aPts) return bPts - aPts;
           return b.progress - a.progress;
         });
 
-        const myTeamRank = team ? sortedRankedTeams.findIndex(t => t.id === team.id) + 1 : 0;
-        const myTeamScore = team?.submissions[0]?.score;
+        const sortedByPrevPoints = [...allTeams].sort((a, b) => {
+          const aPrev = a.previousPoints || 0;
+          const bPrev = b.previousPoints || 0;
+          if (bPrev !== aPrev) return bPrev - aPrev;
+          return a.id.localeCompare(b.id);
+        });
 
-        const filteredLeaderboardTeams = sortedRankedTeams.filter(t => 
+        const getRankShift = (teamId: string, currentRank: number) => {
+          const prevIndex = sortedByPrevPoints.findIndex(t => t.id === teamId);
+          if (prevIndex === -1) return 0;
+          const prevRank = prevIndex + 1;
+          return prevRank - currentRank;
+        };
+
+        const myTeamRank = team ? sortedRankedTeams.findIndex(t => t.id === team.id) + 1 : 0;
+        const myTeamPoints = team?.points || 0;
+
+        const filteredLeaderboardTeams = sortedRankedTeams.filter(t =>
           leaderboardTrack === 'All' || t.track === leaderboardTrack
         );
 
@@ -950,8 +1204,8 @@ export function StudentPortal() {
                     <span className="text-sm font-extrabold text-foreground">{team.collaborationScore} pts</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase block">Grade</span>
-                    <span className="text-sm font-extrabold text-primary font-mono">{myTeamScore !== undefined ? `${myTeamScore}%` : 'TBD'}</span>
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase block">Total Points</span>
+                    <span className="text-sm font-extrabold text-primary font-mono">{myTeamPoints} pts</span>
                   </div>
                 </div>
               </div>
@@ -963,11 +1217,10 @@ export function StudentPortal() {
                 <button
                   key={track}
                   onClick={() => setLeaderboardTrack(track)}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${
-                    leaderboardTrack === track 
-                      ? 'bg-primary text-white border-primary shadow-sm' 
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${leaderboardTrack === track
+                      ? 'bg-primary text-white border-primary shadow-sm'
                       : 'bg-[#121212] text-muted-foreground border-border/15 hover:text-foreground hover:bg-[#181818]'
-                  }`}
+                    }`}
                 >
                   {track}
                 </button>
@@ -990,7 +1243,7 @@ export function StudentPortal() {
                     {filteredLeaderboardTeams[1]?.track || 'Innovation Track'}
                   </span>
                   <div className="mt-4 text-lg font-black text-foreground">
-                    {filteredLeaderboardTeams[1]?.submissions[0]?.score ? `${filteredLeaderboardTeams[1].submissions[0].score}%` : 'TBD'}
+                    {filteredLeaderboardTeams[1]?.points !== undefined ? `${filteredLeaderboardTeams[1].points} pts` : '0 pts'}
                   </div>
                 </div>
 
@@ -1007,7 +1260,7 @@ export function StudentPortal() {
                     {filteredLeaderboardTeams[0]?.track || 'Innovation Track'}
                   </span>
                   <div className="mt-4 text-2xl font-black text-primary">
-                    {filteredLeaderboardTeams[0]?.submissions[0]?.score ? `${filteredLeaderboardTeams[0].submissions[0].score}%` : 'TBD'}
+                    {filteredLeaderboardTeams[0]?.points !== undefined ? `${filteredLeaderboardTeams[0].points} pts` : '0 pts'}
                   </div>
                 </div>
 
@@ -1024,7 +1277,7 @@ export function StudentPortal() {
                     {filteredLeaderboardTeams[2]?.track || 'Innovation Track'}
                   </span>
                   <div className="mt-4 text-lg font-black text-foreground">
-                    {filteredLeaderboardTeams[2]?.submissions[0]?.score ? `${filteredLeaderboardTeams[2].submissions[0].score}%` : 'TBD'}
+                    {filteredLeaderboardTeams[2]?.points !== undefined ? `${filteredLeaderboardTeams[2].points} pts` : '0 pts'}
                   </div>
                 </div>
               </div>
@@ -1038,56 +1291,83 @@ export function StudentPortal() {
                   <thead>
                     <tr className="border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                       <th className="pb-3 text-center w-12">Rank</th>
-                      <th className="pb-3 text-center w-12">Trend</th>
+                      <th className="pb-3 text-center w-14">Shift</th>
                       <th className="pb-3 px-4">Team</th>
                       <th className="pb-3 px-4">College Hub</th>
                       <th className="pb-3 px-4">Track</th>
                       <th className="pb-3 px-4 text-center">Members</th>
                       <th className="pb-3 px-4">Progress</th>
-                      <th className="pb-3 px-4 text-center">Velocity</th>
                       <th className="pb-3 px-4 text-center">Collab Score</th>
-                      <th className="pb-3 px-4 text-right">Grade</th>
+                      <th className="pb-3 px-4 text-right">Points</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/15">
                     {filteredLeaderboardTeams.map((t, idx) => {
-                      const score = t.submissions[0]?.score;
-                      const isGraded = t.submissions[0]?.status === 'reviewed' || score !== undefined;
-                      const velocity = getVelocityValue(t);
-                      
-                      // Simulated trend index
-                      const isTrendingUp = velocity > 5;
-                      const isTrendingDown = velocity === 0;
+                      const currentRank = idx + 1;
+                      const shift = getRankShift(t.id, currentRank);
 
                       return (
                         <tr key={t.id} className={`text-xs font-semibold text-muted-foreground hover:bg-muted/5 transition-colors ${t.id === team?.id ? 'bg-primary/5 text-foreground' : ''}`}>
                           <td className="py-4 text-center">
-                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full font-bold ${
-                              idx === 0 
-                                ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' 
-                                : idx === 1 
-                                ? 'bg-slate-400/10 text-slate-400 border border-slate-400/20' 
-                                : idx === 2 
-                                ? 'bg-amber-600/10 text-amber-700 border border-amber-600/20' 
-                                : 'bg-muted text-muted-foreground'
-                            }`}>
+                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full font-bold ${idx === 0
+                                ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
+                                : idx === 1
+                                  ? 'bg-slate-400/10 text-slate-400 border border-slate-400/20'
+                                  : idx === 2
+                                    ? 'bg-amber-600/10 text-amber-700 border border-amber-600/20'
+                                    : 'bg-muted text-muted-foreground'
+                              }`}>
                               {idx + 1}
                             </span>
                           </td>
                           <td className="py-4 text-center">
-                            {isTrendingUp ? (
-                              <span className="text-emerald-500 font-bold" title="Trending Up">↑</span>
-                            ) : isTrendingDown ? (
-                              <span className="text-rose-500 font-bold" title="Stalled/Trending Down">↓</span>
+                            {shift > 0 ? (
+                              <span className="text-emerald-500 font-bold flex items-center justify-center gap-0.5" title="Rank up">
+                                <span className="text-[10px]">▲</span>
+                                <span className="font-mono text-[10px]">{shift}</span>
+                              </span>
+                            ) : shift < 0 ? (
+                              <span className="text-rose-500 font-bold flex items-center justify-center gap-0.5" title="Rank down">
+                                <span className="text-[10px]">▼</span>
+                                <span className="font-mono text-[10px]">{Math.abs(shift)}</span>
+                              </span>
                             ) : (
-                              <span className="text-muted-foreground/45 font-bold" title="Steady">→</span>
+                              <span className="text-muted-foreground/45 font-bold text-[10px]" title="No change">
+                                •
+                              </span>
                             )}
                           </td>
                           <td className="py-4 px-4 text-foreground font-bold">
-                            {t.name}
-                            {t.id === team?.id && (
-                              <span className="ml-2 px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-[8px] font-bold uppercase tracking-wider">Your Team</span>
-                            )}
+                            <div className="flex flex-col">
+                              <span className="flex items-center gap-1.5">
+                                {t.name}
+                                {t.id === team?.id && (
+                                  <span className="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-[8px] font-bold uppercase tracking-wider">Your Team</span>
+                                )}
+                              </span>
+                              {t.badges && t.badges.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {t.badges.map(badge => {
+                                    const emojis: Record<string, string> = {
+                                      "Pitch Master": "⭐",
+                                      "MVP Builder": "🚀",
+                                      "UIUX Wizard": "🎨",
+                                      "Stellar Growth": "📈",
+                                      "Overachiever": "👑"
+                                    };
+                                    return (
+                                      <span
+                                        key={badge}
+                                        title={badge}
+                                        className="inline-flex items-center justify-center text-[9px] bg-muted/40 rounded-full w-4 h-4 border border-border/10 cursor-help"
+                                      >
+                                        {emojis[badge] || "🏅"}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
                           </td>
                           <td className="py-4 px-4 truncate max-w-[150px]">{t.college}</td>
                           <td className="py-4 px-4 uppercase text-[10px] tracking-wider">{t.track}</td>
@@ -1100,23 +1380,16 @@ export function StudentPortal() {
                               <span className="text-[10px] font-mono">{t.progress}%</span>
                             </div>
                           </td>
-                          <td className="py-4 px-4 text-center font-medium">
-                            {getVelocityLabel(t)}
-                          </td>
                           <td className="py-4 px-4 text-center font-mono text-foreground">{t.collaborationScore} pts</td>
                           <td className="py-4 px-4 text-right font-mono font-bold text-foreground">
-                            {isGraded ? (
-                              <span className="text-primary">{score}%</span>
-                            ) : (
-                              <span className="text-muted-foreground/45 text-[10px] uppercase font-semibold">TBD</span>
-                            )}
+                            <span className="text-primary">{t.points || 0} pts</span>
                           </td>
                         </tr>
                       );
                     })}
                     {filteredLeaderboardTeams.length === 0 && (
                       <tr>
-                        <td colSpan={10} className="text-center py-8 text-muted-foreground/50">No teams enrolled in this track yet.</td>
+                        <td colSpan={9} className="text-center py-8 text-muted-foreground/50">No teams enrolled in this track yet.</td>
                       </tr>
                     )}
                   </tbody>
@@ -1182,7 +1455,7 @@ export function StudentPortal() {
                 <div>
                   <h4 className="text-xs font-bold text-foreground">Physical Support Desk</h4>
                   <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed font-sans">
-                    Located in **Bhoruka Tech Park, Main Block Room 204 (Floor 2)**. Staffed continuously from June 22 to June 26, 2026.
+                    Located in **Bhoruka Tech Park, Main Block Room 204 (Floor 2)**. Staffed continuously from July 22 to July 26, 2026.
                   </p>
                 </div>
               </div>
@@ -1197,14 +1470,14 @@ export function StudentPortal() {
                 </p>
 
                 <div className="mt-4 space-y-2">
-                  <button 
+                  <button
                     onClick={() => setTab('team')}
                     className="w-full text-left p-3 rounded-xl border border-border/20 bg-background/30 hover:bg-muted/10 text-xs font-bold text-foreground flex items-center justify-between transition-colors cursor-pointer"
                   >
                     <span>Request Technical Mentor</span>
                     <ChevronRight className="w-4 h-4 text-primary" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => setTab('twin')}
                     className="w-full text-left p-3 rounded-xl border border-border/20 bg-background/30 hover:bg-muted/10 text-xs font-bold text-foreground flex items-center justify-between transition-colors cursor-pointer"
                   >
@@ -1283,7 +1556,7 @@ export function StudentPortal() {
             <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 flex flex-col justify-between">
               <div>
                 <h3 className="text-sm font-extrabold text-foreground">Subscriptions & Languages</h3>
-                
+
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
                     <span>Email Announcements</span>
@@ -1301,8 +1574,8 @@ export function StudentPortal() {
 
                 <div className="mt-6 pt-4 border-t border-border/15 space-y-2">
                   <label className="block text-[11px] font-bold text-muted-foreground uppercase">Localization Language</label>
-                  <select 
-                    value={language} 
+                  <select
+                    value={language}
                     onChange={e => setLanguage(e.target.value)}
                     className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50"
                   >

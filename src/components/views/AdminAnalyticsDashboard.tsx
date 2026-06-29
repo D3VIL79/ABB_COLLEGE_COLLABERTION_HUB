@@ -298,6 +298,45 @@ export function AdminAnalyticsDashboard() {
     }));
   }, [filteredRequests, filteredTeams]);
 
+  const pointsGrowthData = useMemo(() => {
+    return [
+      { name: 'Start', ...Object.fromEntries(filteredTeams.map(t => [t.name, 0])) },
+      { name: 'Round 1', ...Object.fromEntries(filteredTeams.map(t => {
+        const r1 = t.mentorEvaluations?.find(e => e.round === 1)?.pointsEarned || 0;
+        return [t.name, r1];
+      })) },
+      { name: 'Round 2', ...Object.fromEntries(filteredTeams.map(t => {
+        const r1 = t.mentorEvaluations?.find(e => e.round === 1)?.pointsEarned || 0;
+        const r2 = t.mentorEvaluations?.find(e => e.round === 2)?.pointsEarned || 0;
+        return [t.name, r1 + r2];
+      })) },
+      { name: 'Round 3', ...Object.fromEntries(filteredTeams.map(t => {
+        const r1 = t.mentorEvaluations?.find(e => e.round === 1)?.pointsEarned || 0;
+        const r2 = t.mentorEvaluations?.find(e => e.round === 2)?.pointsEarned || 0;
+        const r3 = t.mentorEvaluations?.find(e => e.round === 3)?.pointsEarned || 0;
+        return [t.name, r1 + r2 + r3];
+      })) }
+    ];
+  }, [filteredTeams]);
+
+  const badgeSummaryData = useMemo(() => {
+    const counts: Record<string, number> = {
+      "Pitch Master": 0,
+      "MVP Builder": 0,
+      "UIUX Wizard": 0,
+      "Stellar Growth": 0,
+      "Overachiever": 0
+    };
+    filteredTeams.forEach(t => {
+      t.badges?.forEach(badge => {
+        if (badge in counts) {
+          counts[badge]++;
+        }
+      });
+    });
+    return Object.entries(counts).map(([name, count]) => ({ name, count }));
+  }, [filteredTeams]);
+
   const stuckTeamScatterData = useMemo(() => {
     return filteredTeams.map(t => {
       const requestCount = filteredRequests.filter(r => r.teamId === t.id && r.status !== 'resolved').length;
@@ -530,6 +569,7 @@ export function AdminAnalyticsDashboard() {
       if (col === 'velocity') return getVelocityValue(t);
       if (col === 'membersCount') return t.members.length;
       if (col === 'submissionsCount') return t.submissions.length;
+      if (col === 'points') return t.points || 0;
       return t[col as keyof Team] as number | string;
     };
     return [...filteredTeams].sort((a, b) => {
@@ -872,10 +912,10 @@ export function AdminAnalyticsDashboard() {
               <p className="text-xs text-muted-foreground mb-4">Toggle graphs ON/OFF to configure your telemetry control view:</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 {[
-                  { id: 1, label: '1. Progress Velocity Curves' },
+                  { id: 1, label: '1. Upgrades & Points curves' },
                   { id: 2, label: '2. Track Enrollment Densities' },
                   { id: 3, label: '3. Conversion Funnel' },
-                  { id: 4, label: '4. Score Distribution' },
+                  { id: 4, label: '4. Badges Summary Distribution' },
                   { id: 5, label: '5. Support Tickets Priority' },
                   { id: 6, label: '6. Team Impediment Mapping' },
                   { id: 7, label: '7. Daily Checkpoint Velocity' },
@@ -904,38 +944,31 @@ export function AdminAnalyticsDashboard() {
         
         {/* Chart 1 */}
         {visibleCharts[1] && (
-          <div className="bg-[#111111] border border-border/10 p-5 rounded-2xl shadow-sm">
+          <div className="bg-[#111111] border border-border/10 p-5 rounded-2xl shadow-sm text-left">
             <div className="mb-4">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase">1. Team Progress Velocity curves</h4>
-              <span className="text-[10px] text-muted-foreground/50 block font-semibold mt-0.5">Acceleration trajectories per milestone checkpoint</span>
+              <h4 className="text-xs font-bold text-muted-foreground uppercase">1. Upgrades & Points Acceleration</h4>
+              <span className="text-[10px] text-muted-foreground/50 block font-semibold mt-0.5">Accumulated points growth per team across Round 1, 2, and 3</span>
             </div>
             <div className="h-[250px] w-full">
-              {progressOverTimeData.length > 0 ? (
+              {pointsGrowthData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={progressOverTimeData}>
-                    <defs>
-                      <linearGradient id="colorProg" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#ff000f" stopOpacity={0.2}/>
-                        <stop offset="95%" stopColor="#ff000f" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
+                  <LineChart data={pointsGrowthData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                    <XAxis dataKey="date" stroke="#666" fontSize={10} />
-                    <YAxis stroke="#666" fontSize={10} domain={[0, 100]} />
+                    <XAxis dataKey="name" stroke="#666" fontSize={10} />
+                    <YAxis stroke="#666" fontSize={10} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend iconSize={8} wrapperStyle={{ fontSize: 9 }} />
                     {filteredTeams.map((team, idx) => (
-                      <Area
+                      <Line
                         key={team.id}
                         type="monotone"
                         dataKey={team.name}
                         stroke={colors[idx % colors.length]}
-                        fillOpacity={1}
-                        fill="url(#colorProg)"
                         strokeWidth={2}
+                        dot={{ r: 3 }}
                       />
                     ))}
-                  </AreaChart>
+                  </LineChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-xs text-muted-foreground">No data matches current filters.</div>
@@ -998,25 +1031,30 @@ export function AdminAnalyticsDashboard() {
 
         {/* Chart 4 */}
         {visibleCharts[4] && (
-          <div className="bg-[#111111] border border-border/10 p-5 rounded-2xl shadow-sm">
+          <div className="bg-[#111111] border border-border/10 p-5 rounded-2xl shadow-sm text-left">
             <div className="mb-4">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase">4. Submission Score Distribution</h4>
-              <span className="text-[10px] text-muted-foreground/50 block font-semibold mt-0.5">Distribution of judge scores across standard evaluation buckets</span>
+              <h4 className="text-xs font-bold text-muted-foreground uppercase">4. Badges Summary Distribution</h4>
+              <span className="text-[10px] text-muted-foreground/50 block font-semibold mt-0.5">Distribution of achievement badges earned across all teams</span>
             </div>
             <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={scoreDistributionData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                  <XAxis dataKey="name" stroke="#666" fontSize={10} />
-                  <YAxis stroke="#666" fontSize={10} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="count" name="Submissions" radius={[4, 4, 0, 0]}>
-                    {scoreDistributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              {badgeSummaryData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={badgeSummaryData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                    <XAxis dataKey="name" stroke="#666" fontSize={10} />
+                    <YAxis stroke="#666" fontSize={10} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="count" name="Badges Awarded" fill="#ff000f" radius={[4, 4, 0, 0]}>
+                      {badgeSummaryData.map((entry, index) => {
+                        const badgeColors = ['#eab308', '#3b82f6', '#a855f7', '#22c55e', '#ef4444'];
+                        return <Cell key={`cell-${index}`} fill={badgeColors[index % badgeColors.length]} />;
+                      })}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-xs text-muted-foreground">No badges awarded yet.</div>
+              )}
             </div>
           </div>
         )}
@@ -1392,7 +1430,8 @@ export function AdminAnalyticsDashboard() {
                   <th className="px-6 py-3 cursor-pointer text-center" onClick={() => setTeamsSort({ col: 'membersCount', asc: !teamsSort.asc })}>Members</th>
                   <th className="px-6 py-3 cursor-pointer" onClick={() => setTeamsSort({ col: 'progress', asc: !teamsSort.asc })}>Progress</th>
                   <th className="px-6 py-3 cursor-pointer" onClick={() => setTeamsSort({ col: 'collaborationScore', asc: !teamsSort.asc })}>Collab</th>
-                  <th className="px-6 py-3 cursor-pointer text-center" onClick={() => setTeamsSort({ col: 'velocity', asc: !teamsSort.asc })}>Velocity</th>
+                  <th className="px-6 py-3 cursor-pointer text-center text-primary" onClick={() => setTeamsSort({ col: 'points', asc: !teamsSort.asc })}>Points</th>
+                  <th className="px-6 py-3">Badges</th>
                   <th className="px-6 py-3 text-right">Status</th>
                 </tr>
               </thead>
@@ -1423,7 +1462,33 @@ export function AdminAnalyticsDashboard() {
                         </div>
                       </td>
                       <td className="px-6 py-4 font-semibold text-foreground">{team.collaborationScore}%</td>
-                      <td className="px-6 py-4 text-center font-medium">{getVelocityLabel(team)} ({getVelocityValue(team)}% / day)</td>
+                      <td className="px-6 py-4 text-center font-extrabold text-primary font-mono">{team.points || 0} pts</td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {team.badges && team.badges.length > 0 ? (
+                            team.badges.map(badge => {
+                              const emojis: Record<string, string> = {
+                                "Pitch Master": "⭐",
+                                "MVP Builder": "🚀",
+                                "UIUX Wizard": "🎨",
+                                "Stellar Growth": "📈",
+                                "Overachiever": "👑"
+                              };
+                              return (
+                                <span 
+                                  key={badge} 
+                                  title={badge} 
+                                  className="inline-flex items-center justify-center text-[9px] bg-muted/40 rounded-full w-4 h-4 border border-border/10 cursor-help"
+                                >
+                                  {emojis[badge] || "🏅"}
+                                </span>
+                              );
+                            })
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground/35 italic">None</span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 text-right">
                         {team.submissions.length > 0 ? (
                           <span className="inline-flex px-2 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-md font-bold uppercase text-[9px]">

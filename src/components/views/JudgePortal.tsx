@@ -2,17 +2,17 @@
 
 import { useState, useMemo } from 'react';
 import { usePlatformStore } from '@/store/usePlatformStore';
-import { 
-  Award, ShieldCheck, CheckCircle2, ChevronRight, 
+import {
+  Award, ShieldCheck, CheckCircle2, ChevronRight,
   ExternalLink, FileText, Check, Trophy, Eye,
   LayoutDashboard, Settings, User, Percent, AlertTriangle,
   Building, Calendar, Mail, Sparkles, Star, ClipboardCheck,
   TrendingUp, Users, Clock, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar, 
-  Legend, Tooltip, BarChart, Bar, CartesianGrid, XAxis, YAxis, Cell 
+import {
+  ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar,
+  Legend, Tooltip, BarChart, Bar, CartesianGrid, XAxis, YAxis, Cell
 } from 'recharts';
 import { PresentationViewerModal } from '../shared/PresentationViewerModal';
 
@@ -99,7 +99,7 @@ export function JudgePortal() {
         const totalSubmissions = submittedTeams.length;
         const gradedTeamsCount = submittedTeams.filter(t => t.submissions.some(s => s.status === 'reviewed')).length;
         const pendingTeamsCount = totalSubmissions - gradedTeamsCount;
-        
+
         const averageGradedScore = (() => {
           const reviewedSubs = allTeams.flatMap(t => t.submissions).filter(s => s.status === 'reviewed');
           if (reviewedSubs.length === 0) return 0;
@@ -127,7 +127,7 @@ export function JudgePortal() {
               </div>
               <div className="flex items-center gap-2 bg-muted/20 border border-border/15 px-3 py-1.5 rounded-xl text-xs font-mono font-bold text-muted-foreground">
                 <Clock className="w-4 h-4 text-primary" />
-                <span>Grading Closes: June 25, 23:59 IST</span>
+                <span>Grading Closes: July 25, 23:59 IST</span>
               </div>
             </div>
 
@@ -169,7 +169,7 @@ export function JudgePortal() {
                 {/* Circular / Line completeness card */}
                 <div className="bg-card border border-border/40 p-5 rounded-2xl space-y-4">
                   <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b border-border/5 pb-2">Grading Completion</h3>
-                  
+
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-muted-foreground font-semibold">Overall Progress</span>
@@ -179,7 +179,7 @@ export function JudgePortal() {
                       <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%` }} />
                     </div>
                     <div className="text-[10px] text-muted-foreground/75 leading-relaxed font-sans mt-2">
-                      Ensure all submissions are evaluated prior to the final Demo Day session on June 26, 2026.
+                      Ensure all submissions are evaluated prior to the final Demo Day session on July 26, 2026.
                     </div>
                   </div>
 
@@ -200,7 +200,7 @@ export function JudgePortal() {
                     <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Evaluation Weights</h3>
                     <button onClick={() => setTab('profile')} className="text-[10px] font-black text-primary hover:underline uppercase">Modify</button>
                   </div>
-                  
+
                   <div className="space-y-3">
                     <div className="space-y-1">
                       <div className="flex justify-between text-[11px] font-semibold">
@@ -248,7 +248,7 @@ export function JudgePortal() {
               {/* Right column: Recent submissions activity feed */}
               <div className="lg:col-span-2 bg-card border border-border/40 p-5 rounded-2xl space-y-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b border-border/5 pb-2">Submissions Activity Feed</h3>
-                
+
                 <div className="divide-y divide-border/15 max-h-[380px] overflow-y-auto pr-1">
                   {submittedTeams.map((team) => {
                     const latestSub = team.submissions[team.submissions.length - 1];
@@ -265,7 +265,7 @@ export function JudgePortal() {
                           </h4>
                           <span className="text-[10px] text-muted-foreground block mt-1">College: {team.college}</span>
                         </div>
-                        
+
                         <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
                           {isReviewed ? (
                             <span className="text-[10px] font-bold text-success flex items-center gap-1 bg-success/5 border border-success/15 px-2 py-1 rounded-lg">
@@ -328,12 +328,11 @@ export function JudgePortal() {
                     const isGraded = latestSub.status === 'reviewed';
 
                     return (
-                      <div 
-                        key={team.id} 
+                      <div
+                        key={team.id}
                         onClick={() => setSelectedTeamId(team.id)}
-                        className={`py-3 flex items-center justify-between gap-4 cursor-pointer hover:bg-muted/10 px-2 rounded-xl transition-all ${
-                          selectedTeamId === team.id ? 'bg-primary/5 border border-primary/25' : ''
-                        }`}
+                        className={`py-3 flex items-center justify-between gap-4 cursor-pointer hover:bg-muted/10 px-2 rounded-xl transition-all ${selectedTeamId === team.id ? 'bg-primary/5 border border-primary/25' : ''
+                          }`}
                       >
                         <div className="min-w-0">
                           <h4 className="text-xs font-bold text-foreground flex items-center gap-2">
@@ -371,7 +370,7 @@ export function JudgePortal() {
               {selectedTeam && activeSubmission ? (
                 <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-5 shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
-                  
+
                   <div>
                     <span className="text-[9px] font-black uppercase text-primary tracking-widest">
                       {selectedTeam.track}
@@ -426,10 +425,10 @@ export function JudgePortal() {
                             <span className="text-muted-foreground">Algorithmic Optimization (40%)</span>
                             <span className="font-mono text-foreground font-bold">{algoScore}/100</span>
                           </div>
-                          <input 
-                            type="range" min={0} max={100} value={algoScore} 
-                            onChange={e => setAlgoScore(Number(e.target.value))} 
-                            className="w-full h-1 bg-muted rounded-full outline-none accent-primary" 
+                          <input
+                            type="range" min={0} max={100} value={algoScore}
+                            onChange={e => setAlgoScore(Number(e.target.value))}
+                            className="w-full h-1 bg-muted rounded-full outline-none accent-primary"
                           />
                         </div>
 
@@ -439,10 +438,10 @@ export function JudgePortal() {
                             <span className="text-muted-foreground">Dashboard UI/UX Design (30%)</span>
                             <span className="font-mono text-foreground font-bold">{uiScore}/100</span>
                           </div>
-                          <input 
-                            type="range" min={0} max={100} value={uiScore} 
-                            onChange={e => setUiScore(Number(e.target.value))} 
-                            className="w-full h-1 bg-muted rounded-full outline-none accent-primary" 
+                          <input
+                            type="range" min={0} max={100} value={uiScore}
+                            onChange={e => setUiScore(Number(e.target.value))}
+                            className="w-full h-1 bg-muted rounded-full outline-none accent-primary"
                           />
                         </div>
 
@@ -452,10 +451,10 @@ export function JudgePortal() {
                             <span className="text-muted-foreground">Technical Scalability (20%)</span>
                             <span className="font-mono text-foreground font-bold">{archScore}/100</span>
                           </div>
-                          <input 
-                            type="range" min={0} max={100} value={archScore} 
-                            onChange={e => setArchScore(Number(e.target.value))} 
-                            className="w-full h-1 bg-muted rounded-full outline-none accent-primary" 
+                          <input
+                            type="range" min={0} max={100} value={archScore}
+                            onChange={e => setArchScore(Number(e.target.value))}
+                            className="w-full h-1 bg-muted rounded-full outline-none accent-primary"
                           />
                         </div>
 
@@ -465,10 +464,10 @@ export function JudgePortal() {
                             <span className="text-muted-foreground">Presentation Quality (10%)</span>
                             <span className="font-mono text-foreground font-bold">{presScore}/100</span>
                           </div>
-                          <input 
-                            type="range" min={0} max={100} value={presScore} 
-                            onChange={e => setPresScore(Number(e.target.value))} 
-                            className="w-full h-1 bg-muted rounded-full outline-none accent-primary" 
+                          <input
+                            type="range" min={0} max={100} value={presScore}
+                            onChange={e => setPresScore(Number(e.target.value))}
+                            className="w-full h-1 bg-muted rounded-full outline-none accent-primary"
                           />
                         </div>
                       </div>
@@ -482,10 +481,10 @@ export function JudgePortal() {
                       {/* Comments */}
                       <div>
                         <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Assessor Feedback Comments</label>
-                        <textarea 
+                        <textarea
                           value={comment} onChange={e => setComment(e.target.value)} rows={3}
                           placeholder="Provide constructive review comments for code quality and UI layout..."
-                          className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 resize-none" 
+                          className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 resize-none"
                         />
                       </div>
 
@@ -569,7 +568,7 @@ export function JudgePortal() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
+
               {/* Leaderboard list */}
               <div className="lg:col-span-1 bg-card border border-border/40 rounded-2xl p-5 space-y-4">
                 <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2 border-b border-border/5 pb-2">
@@ -582,23 +581,21 @@ export function JudgePortal() {
                     const latestSub = team.submissions[team.submissions.length - 1];
                     const score = latestSub?.score || 0;
                     const isSelected = selectedTeamAnalytics?.id === team.id;
-                    
+
                     return (
-                      <div 
-                        key={team.id} 
+                      <div
+                        key={team.id}
                         onClick={() => setSelectedAnalyticsTeamId(team.id)}
-                        className={`py-3 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 p-2 rounded-xl transition-all ${
-                          isSelected ? 'bg-primary/5 border border-primary/20' : ''
-                        }`}
+                        className={`py-3 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 p-2 rounded-xl transition-all ${isSelected ? 'bg-primary/5 border border-primary/20' : ''
+                          }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <span className={`w-5.5 h-5.5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
-                            idx === 0 
-                              ? 'bg-warning text-black font-extrabold shadow shadow-warning/35' 
-                              : idx === 1 
-                              ? 'bg-[#AAB2C0] text-black' 
-                              : 'bg-muted text-muted-foreground'
-                          }`}>
+                          <span className={`w-5.5 h-5.5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${idx === 0
+                              ? 'bg-warning text-black font-extrabold shadow shadow-warning/35'
+                              : idx === 1
+                                ? 'bg-[#AAB2C0] text-black'
+                                : 'bg-muted text-muted-foreground'
+                            }`}>
                             {idx + 1}
                           </span>
                           <div className="min-w-0">
@@ -622,7 +619,7 @@ export function JudgePortal() {
 
               {/* Radar Criteria Analysis + Histogram */}
               <div className="lg:col-span-2 space-y-6">
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Radar Chart */}
                   <div className="bg-[#111111] border border-border/10 p-5 rounded-2xl flex flex-col justify-between">
@@ -693,7 +690,7 @@ export function JudgePortal() {
                 {/* Per-Judge Reviews table */}
                 <div className="bg-[#111111] border border-border/10 p-5 rounded-2xl space-y-3">
                   <h4 className="text-xs font-bold text-muted-foreground uppercase">Evaluator Comments & Audit Trail</h4>
-                  
+
                   <div className="space-y-2.5 max-h-[180px] overflow-y-auto pr-1 custom-scrollbar text-xs">
                     {activeSubForAnalytics && activeSubForAnalytics.feedback && activeSubForAnalytics.feedback.length > 0 ? (
                       activeSubForAnalytics.feedback.map((feed, idx) => (
@@ -746,22 +743,22 @@ export function JudgePortal() {
                   <User className="w-4 h-4 text-primary" />
                   Assessor Personal Details
                 </h3>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">First Name *</label>
-                    <input 
-                      value={firstName} 
-                      onChange={e => setFirstName(e.target.value)} 
-                      className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" 
+                    <input
+                      value={firstName}
+                      onChange={e => setFirstName(e.target.value)}
+                      className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50"
                     />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Last Name *</label>
-                    <input 
-                      value={lastName} 
-                      onChange={e => setLastName(e.target.value)} 
-                      className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" 
+                    <input
+                      value={lastName}
+                      onChange={e => setLastName(e.target.value)}
+                      className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50"
                     />
                   </div>
                 </div>
@@ -769,18 +766,18 @@ export function JudgePortal() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Email Address *</label>
-                    <input 
-                      value={email} 
-                      onChange={e => setEmail(e.target.value)} 
-                      className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" 
+                    <input
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50"
                     />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Assessor Affiliation / College *</label>
-                    <input 
-                      value={organization} 
-                      onChange={e => setOrganization(e.target.value)} 
-                      className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50" 
+                    <input
+                      value={organization}
+                      onChange={e => setOrganization(e.target.value)}
+                      className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50"
                     />
                   </div>
                 </div>
@@ -815,8 +812,8 @@ export function JudgePortal() {
                       <div className="text-xs font-bold text-foreground">Anonymous Comments Mode</div>
                       <div className="text-[10px] text-muted-foreground leading-normal">Hide your assessor display name in evaluation feedback logs visible to students.</div>
                     </div>
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={anonymousComments}
                       onChange={e => setAnonymousComments(e.target.checked)}
                       className="accent-primary w-4.5 h-4.5"
@@ -828,8 +825,8 @@ export function JudgePortal() {
                       <div className="text-xs font-bold text-foreground">Send Score Notifications</div>
                       <div className="text-[10px] text-muted-foreground leading-normal">Automatically alert student teams via in-app notification when grades are locked.</div>
                     </div>
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={sendEmailToStudents}
                       onChange={e => setSendEmailToStudents(e.target.checked)}
                       className="accent-primary w-4.5 h-4.5"
@@ -841,8 +838,8 @@ export function JudgePortal() {
                       <div className="text-xs font-bold text-foreground">Enable Autosave Drafts</div>
                       <div className="text-[10px] text-muted-foreground leading-normal">Temporarily store sliders positions on your browser as local drafts while grading.</div>
                     </div>
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={autoSaveDraft}
                       onChange={e => setAutoSaveDraft(e.target.checked)}
                       className="accent-primary w-4.5 h-4.5"
@@ -856,7 +853,7 @@ export function JudgePortal() {
             <div className="space-y-6">
               <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
-                
+
                 <div>
                   <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
                     <Percent className="w-4 h-4 text-primary" />
@@ -887,10 +884,10 @@ export function JudgePortal() {
                       <span className="text-muted-foreground">Algorithmic Optimization</span>
                       <span className="font-mono text-foreground font-bold">{algoWeight}%</span>
                     </div>
-                    <input 
-                      type="range" min={0} max={100} value={algoWeight} 
-                      onChange={e => setAlgoWeight(Number(e.target.value))} 
-                      className="w-full h-1 bg-muted rounded-full outline-none accent-primary" 
+                    <input
+                      type="range" min={0} max={100} value={algoWeight}
+                      onChange={e => setAlgoWeight(Number(e.target.value))}
+                      className="w-full h-1 bg-muted rounded-full outline-none accent-primary"
                     />
                   </div>
 
@@ -900,10 +897,10 @@ export function JudgePortal() {
                       <span className="text-muted-foreground">Dashboard UI/UX Design</span>
                       <span className="font-mono text-foreground font-bold">{uiWeight}%</span>
                     </div>
-                    <input 
-                      type="range" min={0} max={100} value={uiWeight} 
-                      onChange={e => setUiWeight(Number(e.target.value))} 
-                      className="w-full h-1 bg-muted rounded-full outline-none accent-primary" 
+                    <input
+                      type="range" min={0} max={100} value={uiWeight}
+                      onChange={e => setUiWeight(Number(e.target.value))}
+                      className="w-full h-1 bg-muted rounded-full outline-none accent-primary"
                     />
                   </div>
 
@@ -913,10 +910,10 @@ export function JudgePortal() {
                       <span className="text-muted-foreground">Technical Scalability</span>
                       <span className="font-mono text-foreground font-bold">{archWeight}%</span>
                     </div>
-                    <input 
-                      type="range" min={0} max={100} value={archWeight} 
-                      onChange={e => setArchWeight(Number(e.target.value))} 
-                      className="w-full h-1 bg-muted rounded-full outline-none accent-primary" 
+                    <input
+                      type="range" min={0} max={100} value={archWeight}
+                      onChange={e => setArchWeight(Number(e.target.value))}
+                      className="w-full h-1 bg-muted rounded-full outline-none accent-primary"
                     />
                   </div>
 
@@ -926,10 +923,10 @@ export function JudgePortal() {
                       <span className="text-muted-foreground">Presentation Quality</span>
                       <span className="font-mono text-foreground font-bold">{presWeight}%</span>
                     </div>
-                    <input 
-                      type="range" min={0} max={100} value={presWeight} 
-                      onChange={e => setPresWeight(Number(e.target.value))} 
-                      className="w-full h-1 bg-muted rounded-full outline-none accent-primary" 
+                    <input
+                      type="range" min={0} max={100} value={presWeight}
+                      onChange={e => setPresWeight(Number(e.target.value))}
+                      className="w-full h-1 bg-muted rounded-full outline-none accent-primary"
                     />
                   </div>
                 </div>

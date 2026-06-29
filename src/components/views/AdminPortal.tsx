@@ -2,23 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { usePlatformStore, Challenge } from '@/store/usePlatformStore';
-import { 
-  Home, Megaphone, Calendar, Users, CheckCircle2, 
+import {
+  Home, Megaphone, Calendar, Users, CheckCircle2,
   Trash2, Plus, ArrowRight, ShieldCheck, Mail, Send,
   BarChart3, Settings, Trophy, ShieldAlert, MessageSquareCode, Clock, UserCheck,
-  X
+  X, Award
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AdminAnalyticsDashboard } from './AdminAnalyticsDashboard';
 import { FacultyPortal } from './FacultyPortal';
 
 export function AdminPortal() {
-  const { 
-    role, activeTab, allTeams, addNotification, addCalendarEvent, 
+  const {
+    role, activeTab, allTeams, addNotification, addCalendarEvent,
     notifications, calendarEvents, challenges, addChallenge, deleteChallenge,
     mentorRequests, assignMentor, resolveMentorRequest, mentors, setTab,
     countdownDate, phases, activePhaseIndex, setCountdownDate, setActivePhaseIndex, addPhase, updatePhase, deletePhase,
-    updateChallengeProblemStatements, addToast
+    updateChallengeProblemStatements, addToast,
+    evaluationRound, setEvaluationRound, assignMentorToTeam
   } = usePlatformStore();
 
   const [selectedTrackForPs, setSelectedTrackForPs] = useState<string | null>(null);
@@ -124,7 +125,7 @@ export function AdminPortal() {
   const handleBroadcast = (e: React.FormEvent) => {
     e.preventDefault();
     if (!broadcastTitle || !broadcastContent) return;
-    
+
     addNotification(broadcastTitle, broadcastContent, 'announcement');
     setBroadcastSuccess(true);
     setBroadcastTitle('');
@@ -176,7 +177,7 @@ export function AdminPortal() {
 
     addChallenge(challengeObj);
     setChallengeSuccess(true);
-    
+
     // Clear states
     setNewTitle('');
     setNewTags('');
@@ -213,7 +214,7 @@ export function AdminPortal() {
 
   return (
     <div className="flex-grow w-full overflow-y-auto bg-background font-satoshi">
-      
+
       {/* ========================================== */}
       {/* I. ADMIN WORKFLOWS                         */}
       {/* ========================================== */}
@@ -264,7 +265,7 @@ export function AdminPortal() {
                     <Calendar className="w-4.5 h-4.5 text-primary" />
                     Event Timeline Control Center
                   </h3>
-                  
+
                   <div className="relative border-l border-border/50 pl-6 space-y-6">
                     {phases.map((evt, idx) => {
                       const isActive = idx === activePhaseIndex;
@@ -272,16 +273,15 @@ export function AdminPortal() {
 
                       return (
                         <div key={evt.id} className="relative">
-                          <div className={`absolute -left-[31px] w-4 h-4 rounded-full border-2 bg-background flex items-center justify-center transition-colors ${
-                            isActive 
-                              ? 'border-primary shadow-[0_0_8px_rgba(255,0,15,0.3)] bg-primary' 
-                              : isCompleted 
-                              ? 'border-emerald-500 bg-emerald-500' 
-                              : 'border-border'
-                          }`}>
+                          <div className={`absolute -left-[31px] w-4 h-4 rounded-full border-2 bg-background flex items-center justify-center transition-colors ${isActive
+                              ? 'border-primary shadow-[0_0_8px_rgba(255,0,15,0.3)] bg-primary'
+                              : isCompleted
+                                ? 'border-emerald-500 bg-emerald-500'
+                                : 'border-border'
+                            }`}>
                             {isCompleted && <span className="text-[8px] text-white">✓</span>}
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             <span className={`text-xs font-bold ${isActive ? 'text-primary' : isCompleted ? 'text-emerald-500' : 'text-muted-foreground'}`}>
                               Phase {idx + 1}
@@ -332,7 +332,7 @@ export function AdminPortal() {
                     <Megaphone className="w-4.5 h-4.5 text-primary" />
                     Broadcast Announcement
                   </h3>
-                  
+
                   <form onSubmit={handleBroadcast} className="space-y-4">
                     {broadcastSuccess && (
                       <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-emerald-400 text-xs font-semibold flex items-center gap-2">
@@ -373,6 +373,88 @@ export function AdminPortal() {
                 </div>
               </div>
 
+              {/* Interval Progress & Evaluation Control Center */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* Evaluation Rounds Controller */}
+                <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 text-left">
+                  <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+                    <Award className="w-4.5 h-4.5 text-primary" />
+                    <span>Evaluation Rounds Controller</span>
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground leading-normal font-sans">
+                    Advance the current evaluation round. Changing the round will broadcast alerts and update student and mentor forms automatically.
+                  </p>
+
+                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-border/30 bg-muted/15">
+                    <div>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase block">Current Active Round</span>
+                      <span className="text-sm font-black text-foreground">Round {evaluationRound} / 3</span>
+                    </div>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-primary/25 text-primary uppercase bg-primary/5">
+                      {evaluationRound === 1 ? 'Idea & Pitch Review' : evaluationRound === 2 ? 'MVP & Feature Check' : 'Final Polish & UI'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {[1, 2, 3].map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => {
+                          setEvaluationRound(r);
+                          addToast('Round Changed', `Active evaluation round updated to Round ${r}`, 'success');
+                        }}
+                        className={`py-2 rounded-lg font-bold text-xs uppercase transition-colors cursor-pointer border ${evaluationRound === r
+                            ? 'bg-primary text-white border-primary shadow-sm shadow-primary/5'
+                            : 'bg-background text-muted-foreground border-border/20 hover:text-foreground hover:bg-muted/10'
+                          }`}
+                      >
+                        Round {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Mentor Assignment Tool */}
+                <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 text-left">
+                  <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+                    <Users className="w-4.5 h-4.5 text-primary" />
+                    <span>Mentor Assignment Tool</span>
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground leading-normal font-sans">
+                    Assign corporate mentors to student teams to oversee progress and perform checklist reviews.
+                  </p>
+
+                  <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                    {allTeams.map((team) => (
+                      <div key={team.id} className="flex items-center justify-between p-2.5 rounded-lg border border-border/20 bg-background gap-3">
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-foreground truncate">{team.name}</div>
+                          <div className="text-[9px] text-muted-foreground font-sans truncate">{team.college}</div>
+                        </div>
+
+                        <select
+                          value={team.assignedMentorId || ''}
+                          onChange={(e) => {
+                            assignMentorToTeam(team.id, e.target.value);
+                            addToast('Mentor Updated', `Assigned mentor updated for Team ${team.name}`, 'success');
+                          }}
+                          className="text-[11px] font-semibold p-2.5 rounded-lg border border-border/30 bg-[#121212] text-foreground outline-none focus:border-primary/50 w-44 truncate"
+                        >
+                          <option value="">Unassigned</option>
+                          {mentors.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
               {/* Event Settings & Configuration Panel */}
               <div className="rounded-2xl border border-border/40 bg-card p-6 space-y-6">
                 <div>
@@ -386,7 +468,7 @@ export function AdminPortal() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  
+
                   {/* Column 1: Countdown Date Setup */}
                   <div className="space-y-4">
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block border-b border-border/20 pb-2">
@@ -435,7 +517,7 @@ export function AdminPortal() {
                         <input
                           value={newPhaseDate}
                           onChange={(e) => setNewPhaseDate(e.target.value)}
-                          placeholder="e.g. June 24, 2026"
+                          placeholder="e.g. July 24, 2026"
                           className="w-full text-xs font-semibold p-2.5 rounded-lg border border-border/30 bg-background text-foreground outline-none focus:border-primary/50 border-white/10"
                           required
                         />
@@ -635,15 +717,14 @@ export function AdminPortal() {
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => setSelectedTrackForPs(isExpanded ? null : ch.id)}
-                                  className={`px-2 py-1 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
-                                    isExpanded 
-                                      ? 'bg-primary border-primary text-white' 
+                                  className={`px-2 py-1 rounded text-[10px] font-bold border transition-colors cursor-pointer ${isExpanded
+                                      ? 'bg-primary border-primary text-white'
                                       : 'bg-muted/40 border-border/30 text-foreground hover:bg-muted/60'
-                                  }`}
+                                    }`}
                                 >
                                   {isExpanded ? 'Hide PS' : `Manage PS (${pStatements.length})`}
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => setTrackToDelete(ch)}
                                   className="p-1 rounded bg-muted/60 text-muted-foreground hover:text-red-400 border border-border/30 hover:border-red-400/20 cursor-pointer"
                                 >
@@ -819,7 +900,7 @@ export function AdminPortal() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4">
               <h3 className="text-sm font-extrabold text-foreground">SSO Workspace Credentials</h3>
-              
+
               <div className="space-y-3 font-sans">
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Campus Profile ID:</span>
@@ -844,7 +925,7 @@ export function AdminPortal() {
 
             <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4">
               <h3 className="text-sm font-extrabold text-foreground">Preferences Localization</h3>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
                   <span>Receive Email Reports</span>
