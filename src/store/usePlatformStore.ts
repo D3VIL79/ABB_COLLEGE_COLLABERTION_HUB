@@ -270,7 +270,7 @@ interface PlatformState {
   removeToast: (id: string) => void;
 }
 
-export const usePlatformStore = create<PlatformState>((set, get) => ({
+export const usePlatformStore = create<PlatformState>((set) => ({
   role: 'guest',
   activeTab: 'home',
   selectedChallengeId: null,
@@ -2779,4 +2779,3 @@ export const usePlatformStore = create<PlatformState>((set, get) => ({
     };
   })
 }));
-
