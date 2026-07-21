@@ -464,7 +464,7 @@ export function LandingView() {
                 className="absolute bottom-6 left-6 border-l-2 border-[#ff000f] bg-black/46 px-5 py-4 backdrop-blur-sm"
               >
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#ff000f]">
-                  Nashik Context: Heritage to Innovation
+                  Nashik: Heritage to Innovation
                 </p>
                 <p className="mt-2 max-w-sm text-sm font-semibold text-white/88">
                   From Nashik&apos;s timeless Vedic wisdom and green heritage to future-ready innovations shaping a sustainable tomorrow.
