@@ -382,13 +382,30 @@ export function LandingView() {
     <main className="relative z-10 overflow-hidden bg-transparent text-white">
       <section
         id="hero"
-        className="mx-auto flex min-h-[64vh] max-w-7xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6"
+        className="relative mx-auto flex min-h-[64vh] max-w-7xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6"
       >
+        {/* Large ABB-styled "5th" image on the left side */}
+        <motion.div
+          initial={{ opacity: 0, x: -40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1.2, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="pointer-events-none absolute left-4 top-1/2 z-0 hidden -translate-y-1/2 sm:left-10 sm:block md:left-14 lg:left-20"
+        >
+          <Image
+            src="/abb-5th-v2.png"
+            alt="5th"
+            width={320}
+            height={420}
+            className="h-[160px] w-auto object-contain brightness-110 saturate-150 sm:h-[200px] md:h-[250px] lg:h-[300px]"
+            style={{ filter: 'brightness(1.15) saturate(1.6) contrast(1.1)' }}
+          />
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, scale: 0.82, y: -16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="mb-7"
+          className="relative z-10 mb-7"
         >
           <Image
             src="/abb-logo.png"
@@ -403,7 +420,7 @@ export function LandingView() {
           initial={{ opacity: 0, y: 26 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.12 }}
-          className="text-5xl font-bold tracking-tight text-white sm:text-7xl lg:text-8xl"
+          className="relative z-10 text-5xl font-bold tracking-tight text-white sm:text-7xl lg:text-8xl"
         >
           Launchpad
         </motion.h1>
@@ -411,7 +428,7 @@ export function LandingView() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.24 }}
-          className="mt-4 text-2xl font-normal text-white/85 sm:text-4xl"
+          className="relative z-10 mt-4 text-2xl font-normal text-white/85 sm:text-4xl"
         >
           Fuelling Ideas, Accelerating Future
         </motion.p>
