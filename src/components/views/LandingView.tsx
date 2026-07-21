@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Award,
   BookOpen,
@@ -14,6 +14,7 @@ import {
   Handshake,
   Lightbulb,
   MapPin,
+  Maximize2,
   MessageSquareText,
   SearchCheck,
   Settings,
@@ -21,7 +22,9 @@ import {
   Trophy,
   Users,
   UsersRound,
+  X,
   Zap,
+  ZoomIn,
 } from 'lucide-react';
 
 const targetDate = '2026-08-03T09:00:00+05:30';
@@ -359,12 +362,27 @@ function PeopleGrid({
 }
 
 export function LandingView() {
+  const [isPosterOpen, setIsPosterOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
   });
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsPosterOpen(false);
+    };
+    if (isPosterOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isPosterOpen]);
 
   useEffect(() => {
     const initial = window.setTimeout(() => setTimeLeft(getTimeLeft()), 0);
@@ -474,15 +492,25 @@ export function LandingView() {
             <motion.div
               {...fadeUp}
               transition={{ ...fadeUp.transition, delay: 0.12 }}
-              className="group relative min-h-[380px] overflow-hidden border border-white/10 bg-black flex items-center justify-center p-2"
+              onClick={() => setIsPosterOpen(true)}
+              className="group relative min-h-[380px] cursor-pointer overflow-hidden border border-white/10 bg-black flex items-center justify-center p-2 transition-all duration-300 hover:border-[#ff000f]/60 hover:shadow-[0_0_30px_rgba(255,0,15,0.25)]"
+              title="Click to view poster full screen"
             >
               <Image
                 src="/launchpad-poster.jpg"
                 alt="ABB LaunchPad 5th College Collaboration Event Poster"
                 width={785}
                 height={1100}
-                className="h-full max-h-[500px] w-full object-contain transition-transform duration-700 group-hover:scale-[1.02]"
+                className="h-full max-h-[500px] w-full object-contain transition-transform duration-700 group-hover:scale-[1.03]"
               />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-2 backdrop-blur-[2px]">
+                <div className="rounded-full bg-[#ff000f] p-3 text-white shadow-lg transition-transform duration-300 group-hover:scale-110">
+                  <ZoomIn className="h-6 w-6" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-white bg-black/80 px-3 py-1 border border-white/20">
+                  Click to Expand
+                </span>
+              </div>
             </motion.div>
           </div>
 
@@ -748,6 +776,54 @@ export function LandingView() {
       <footer className="border-t border-white/10 bg-black py-8 text-center text-xs uppercase tracking-[0.28em] text-white/40">
         ABB Launchpad | Fuelling Ideas, Accelerating Future
       </footer>
+
+      {/* Fullscreen Poster Lightbox Modal */}
+      <AnimatePresence>
+        {isPosterOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setIsPosterOpen(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/92 p-4 backdrop-blur-md sm:p-8"
+          >
+            {/* Top controls */}
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-3 sm:top-6 sm:right-6">
+              <span className="hidden text-xs font-semibold uppercase tracking-widest text-white/60 sm:inline-block">
+                Press ESC or click outside to close
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsPosterOpen(false)}
+                className="grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-black/80 text-white transition-colors hover:border-[#ff000f] hover:bg-[#ff000f]"
+                aria-label="Close full screen view"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Poster image container */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-h-[92vh] max-w-[92vw] overflow-auto rounded-lg border border-white/15 bg-black p-2 shadow-2xl"
+            >
+              <Image
+                src="/launchpad-poster.jpg"
+                alt="ABB LaunchPad 5th College Collaboration Event Poster Fullscreen"
+                width={1200}
+                height={1680}
+                priority
+                className="h-auto max-h-[88vh] w-auto max-w-full object-contain"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
