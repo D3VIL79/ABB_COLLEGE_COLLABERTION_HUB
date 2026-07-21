@@ -385,7 +385,7 @@ export function LandingView() {
         className="relative mx-auto flex min-h-[64vh] max-w-7xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6"
       >
         {/* Hero group — 5th image + text as one centered entity */}
-        <div className="flex items-center gap-4 sm:gap-6 md:gap-8 lg:gap-10">
+        <div className="flex items-center gap-0 sm:gap-1 md:gap-1.5 lg:gap-2">
           {/* 5th image — left side */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
