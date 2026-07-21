@@ -8,13 +8,19 @@ import {
   BookOpen,
   Briefcase,
   CalendarDays,
+  ClipboardList,
   Cpu,
   ExternalLink,
+  Handshake,
+  Lightbulb,
   MapPin,
+  MessageSquareText,
+  SearchCheck,
   Settings,
   Timer,
   Trophy,
   Users,
+  UsersRound,
   Zap,
 } from 'lucide-react';
 
@@ -29,39 +35,6 @@ const timeUnits = [
 
 const overviewText =
   'ABB launchpad 2026 is a flagship Industry-Academia innovation program designed to bridge the gap between classroom learning and real-world industrial challenges.';
-
-const topicCards = [
-  {
-    title: 'Automation',
-    description:
-      'Automation is the application of technology, software, or machinery to perform tasks and processes with minimal to no human intervention. It involves setting up self-operating systems to handle repetitive, time-consuming, or dangerous work.',
-  },
-  {
-    title: 'Digitalization',
-    description:
-      'Digitalization is the use of digital technologies to transform a business model, improve everyday processes, and create new value-producing opportunities. It changes how an organization operates and delivers value to its customers.',
-  },
-  {
-    title: 'Artificial Intelligence',
-    description:
-      'Artificial Intelligence is the branch of computer science dedicated to creating systems capable of performing tasks that typically require human intelligence, such as understanding language, recognizing patterns, solving problems, and learning from experience.',
-  },
-  {
-    title: 'IoT',
-    description:
-      'The Internet of Things refers to the network of physical objects embedded with sensors, software, and connectivity, allowing them to collect and exchange data with other devices and systems over the internet in real time.',
-  },
-  {
-    title: 'AGV',
-    description:
-      'An Automated Guided Vehicle is a computer-controlled, driverless mobile robot used in industrial applications to transport materials, heavy loads, or inventory across a facility, plant, or distribution warehouse.',
-  },
-  {
-    title: 'Simulation',
-    description:
-      'Simulation is the creation of a virtual model or digital replica of a real-world physical system, process, or environment. It is used to study, analyze, and predict how systems behave under different conditions.',
-  },
-];
 
 const trackCards = [
   {
@@ -98,41 +71,53 @@ const trackCards = [
 
 const agenda = [
   {
-    phase: 'Phase I',
-    date: '03 August 2026',
-    content: 'Kick Off Meeting',
-    detail: 'Launch briefing, program expectations, and challenge orientation.',
+    phase: 'Registration & Team Formation',
+    date: 'Aug 03 – 07, 2026',
+    purpose: 'Sign up, form teams of 5, and get paired with an industry mentor.',
+    icon: ClipboardList,
   },
   {
-    phase: 'Phase II',
-    date: '06 August 2026 to 31 August 2026',
-    content: 'Understanding Process & Identifying Problem Statement',
-    detail: 'Observe, question, map the process, and lock the right problem.',
+    phase: 'Kick-off Meeting',
+    date: 'Aug 10, 2026',
+    purpose: 'Official launch day with ABB leadership, mentors, and networking.',
+    icon: Handshake,
   },
   {
-    phase: 'Phase III',
-    date: '01 September 2026 to 09 October 2026',
-    content: 'Working on Problem & Finding Solution',
-    detail: 'Prototype, iterate with mentors, validate, and prepare the solution.',
+    phase: 'Problem Discovery & Selection',
+    date: 'Aug 11 – 21, 2026',
+    purpose: 'Identify real industrial challenges and finalize problem statements.',
+    icon: SearchCheck,
   },
   {
-    phase: 'Phase IV',
-    date: '12 October 2026 to 16 October 2026',
-    content: 'Final Project Submission',
-    detail: 'Submit project artifacts, demo evidence, and final documentation.',
+    phase: 'Training & Support',
+    date: 'Aug 24 – Sep 04, 2026',
+    purpose: 'Focused workshops on tools, tech, and working methodologies.',
+    icon: Lightbulb,
   },
   {
-    phase: 'Phase V',
-    date: '19 October 2026 to 30 October 2026',
-    content: 'Competition',
-    detail: 'Present, demo, defend, and compete for recognition.',
+    phase: 'Use Case Development',
+    date: 'Sep 07 – Nov 27, 2026',
+    purpose: '90+ days of prototyping, iteration, and mentor-guided building.',
+    icon: UsersRound,
+  },
+  {
+    phase: 'Jury Round',
+    date: 'Nov 30 – Dec 04, 2026',
+    purpose: 'Top 3 solutions shortlisted by an expert evaluation panel.',
+    icon: MessageSquareText,
+  },
+  {
+    phase: 'Evaluation & Rewards',
+    date: 'Dec 07 – 11, 2026',
+    purpose: 'Final pitches, live demos, winner announcement, and prizes.',
+    icon: Trophy,
   },
 ];
 
 const benefits = [
   {
-    title: '3 Months In-Hand Training',
-    desc: 'Practical industry exposure while working around real manufacturing and digital workflows.',
+    title: '3+ Months In-Hand Training',
+    desc: 'Practical 90+ day industry exposure while working around real manufacturing and digital workflows.',
     icon: Cpu,
   },
   {
@@ -157,7 +142,7 @@ const benefits = [
   },
   {
     title: 'Premium Tools Access',
-    desc: 'Hands-on exposure to engineering toolchains, simulation ideas, and structured delivery methods.',
+    desc: 'Access to Microsoft 365 tools such as Teams, SharePoint, Forms, Planner, OneDrive, PowerPoint, Excel, and Power BI-style workflows that are not always easy to access in regular academic projects.',
     icon: Settings,
   },
 ];
@@ -185,44 +170,58 @@ const itemMotion = {
   },
 } as const;
 
-const coreTeam = [
+type Person = {
+  name: string;
+  role: string;
+  linkedin: string;
+  photo?: string;
+};
+
+const coreTeam: Person[] = [
   {
     name: 'Manoj M. Wagh',
     role: 'Local Product Line Manager - Vacuum',
     linkedin: 'https://in.linkedin.com/in/manojmwagh',
+    photo: '/people/manoj-wagh.jpg',
   },
   {
     name: 'Rohan Ghogare',
     role: 'Local Division Operations Manager',
     linkedin: 'https://in.linkedin.com/in/rohan-ghogare-42490b16',
+    photo: '/people/rohan-ghogare.jpg',
   },
   {
     name: 'Dayanand Kulkarni',
     role: 'Division HR Business Partner & Industrial Relations',
     linkedin: 'https://in.linkedin.com/in/dayanand-kulkarni-3420301b1',
+    photo: '/people/dayanand-kulkarni.jpg',
   },
   {
     name: 'Shrikant Nimbalkar',
     role: 'Manufacturing Digitalization Manager',
     linkedin: 'https://in.linkedin.com/in/shrikant-nimbalkar-80038376',
+    photo: '/people/shrikant-nimbalkar.jpg',
   },
   {
     name: 'Vinod Dattawadkar',
     role: 'Sr. Manager - Production & Operational Excellence',
     linkedin: 'https://in.linkedin.com/in/vinod-dattawadkar-b6a13553',
+    photo: '/people/vinod-dattawadkar.jpg',
   },
   {
     name: 'Abhijeet Vinayaksolanke',
     role: 'EL, ELDS, DSSWPAIS',
     linkedin: 'https://www.linkedin.com/search/results/people/?keywords=Abhijeet%20Vinayaksolanke%20ABB',
+    photo: '/people/abhijeet-vinayaksolanke.jpg',
   },
 ];
 
-const industryMentors = [
+const industryMentors: Person[] = [
   {
     name: 'Machhindra Khadake',
     role: 'Senior Manager - Operations at ABB India Ltd',
     linkedin: 'https://in.linkedin.com/in/machhindra-khadake-627a03195',
+    photo: '/people/machhindra-khadake.jpg',
   },
   {
     name: 'Shivam Deore',
@@ -233,6 +232,7 @@ const industryMentors = [
     name: 'Ashok Sanap',
     role: 'AVP at ABB India Ltd.',
     linkedin: 'https://in.linkedin.com/in/ashok-sanap-a87548b1',
+    photo: '/people/ashok-sanap.jpg',
   },
   {
     name: 'Pavan Harde',
@@ -243,16 +243,19 @@ const industryMentors = [
     name: 'Ganesh Waichal',
     role: 'Operations Strategy & Manufacturing Excellence',
     linkedin: 'https://in.linkedin.com/in/ganesh-waichal-30242b315',
+    photo: '/people/ganesh-waichal.jpg',
   },
   {
     name: 'Yogesh Chaudhari',
     role: 'Procurement & Logistics Manager, ABB India Ltd',
     linkedin: 'https://in.linkedin.com/in/yogesh-chaudhari-4bb70958',
+    photo: '/people/yogesh-chaudhari.jpg',
   },
   {
     name: 'Bhushan Dhake',
     role: 'Testing & Quality Engineer at ABB India Limited',
     linkedin: 'https://in.linkedin.com/in/bhushan-dhake-497255a8',
+    photo: '/people/bhushan-dhake.jpg',
   },
   {
     name: 'Surendra Sutar',
@@ -268,6 +271,7 @@ const industryMentors = [
     name: 'Sachin Patil',
     role: 'EL, ELSE, SER SAI A',
     linkedin: 'https://www.linkedin.com/search/results/people/?keywords=Sachin%20Patil%20ABB%20Nashik',
+    photo: '/people/sachin-patil.jpg',
   },
 ];
 
@@ -307,7 +311,7 @@ function PeopleGrid({
   people,
   compact = false,
 }: {
-  people: typeof coreTeam;
+  people: Person[];
   compact?: boolean;
 }) {
   return (
@@ -315,14 +319,24 @@ function PeopleGrid({
       {people.map((person) => (
         <motion.article key={person.name} variants={itemMotion} className="group">
           <h3 className="mb-4 text-xl font-bold text-white">{person.name}</h3>
-          <div className="min-h-44 border border-[#ff000f] bg-white p-4 text-black transition-transform duration-300 group-hover:-translate-y-1">
+          <div className="min-h-56 border border-[#ff000f] bg-white p-4 text-black transition-transform duration-300 group-hover:-translate-y-1">
             <div className="flex items-start gap-4">
-              <div
-                className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-zinc-100 text-sm font-bold text-zinc-900 ring-1 ring-zinc-200"
-                aria-label={`${person.name} portrait`}
-              >
-                {initialsFor(person.name)}
-              </div>
+              {person.photo ? (
+                <Image
+                  src={person.photo}
+                  alt={`${person.name} portrait`}
+                  width={72}
+                  height={72}
+                  className="h-[72px] w-[72px] shrink-0 rounded-full object-cover ring-2 ring-zinc-100"
+                />
+              ) : (
+                <div
+                  className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-zinc-100 text-sm font-bold text-zinc-900 ring-1 ring-zinc-200"
+                  aria-label={`${person.name} portrait`}
+                >
+                  {initialsFor(person.name)}
+                </div>
+              )}
               <div className="min-w-0 pt-1">
                 <p className="text-sm font-bold text-black">{person.name}</p>
                 <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-zinc-500">
@@ -399,7 +413,7 @@ export function LandingView() {
           transition={{ duration: 0.8, delay: 0.24 }}
           className="mt-4 text-2xl font-normal text-white/85 sm:text-4xl"
         >
-          ABB College Collaboration Hub
+          Fuelling Ideas, Accelerating Future
         </motion.p>
       </section>
 
@@ -427,10 +441,10 @@ export function LandingView() {
                 className="absolute bottom-6 left-6 border-l-2 border-[#ff000f] bg-black/46 px-5 py-4 backdrop-blur-sm"
               >
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#ff000f]">
-                  Nashik Context
+                  Nashik Context: Heritage to Innovation
                 </p>
                 <p className="mt-2 max-w-sm text-sm font-semibold text-white/88">
-                  Inspired by Nashik&apos;s learning ecosystem, industrial presence, and places like Trimbakeshwar.
+                  From Nashik&apos;s timeless Vedic wisdom and green heritage to future-ready innovations shaping a sustainable tomorrow.
                 </p>
               </motion.div>
             </motion.div>
@@ -442,10 +456,10 @@ export function LandingView() {
               <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#ff000f]">Overview</p>
               <p className="mt-5 text-xl font-bold leading-relaxed text-white sm:text-2xl">{overviewText}</p>
               <p className="mt-6 text-sm leading-7 text-white/70 sm:text-base">
-                The ABB College Collaboration Hub brings together engineering students and ABB teams
-                to solve practical industrial challenges. Participants work with mentors, explore
-                automation and digital technologies, and build project solutions across a focused
-                launchpad journey.
+                From Nashik&apos;s timeless Vedic wisdom and green heritage to future-ready
+                innovations shaping a sustainable tomorrow. The program brings together
+                engineering students and ABB teams to solve practical industrial challenges
+                through mentoring, technology access, and focused project execution.
               </p>
             </motion.div>
           </div>
@@ -453,8 +467,8 @@ export function LandingView() {
           <motion.div {...stagger} className="mt-12 grid gap-6 sm:grid-cols-3">
             {[
               { icon: Users, value: '15+', label: 'Participating Teams' },
-              { icon: Award, value: '18', label: 'Industry Mentors' },
-              { icon: Zap, value: '90', label: 'Program Days' },
+              { icon: Award, value: '16', label: 'Core Team & Mentors' },
+              { icon: Zap, value: '90+', label: 'Program Days' },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -509,7 +523,7 @@ export function LandingView() {
               <Timer className="h-6 w-6 text-[#ff000f]" />
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/45">Countdown</p>
-                <h2 className="text-2xl font-bold text-white">Kick Off Meeting</h2>
+                <h2 className="text-2xl font-bold text-white">Registration Opens</h2>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -589,62 +603,93 @@ export function LandingView() {
         </div>
       </section>
 
-      <section id="topics" className="bg-black/38 py-14 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <SectionTitle title="Explore the Key Topics" />
-          <motion.div {...stagger} className="grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
-            {topicCards.map((topic) => (
-              <motion.article
-                key={topic.title}
-                variants={itemMotion}
-                whileHover={{ y: -8, borderColor: 'rgba(255,255,255,0.95)' }}
-                className="border-y border-white/70 bg-black/22 px-2 py-7"
-              >
-                <h3 className="text-center text-xl font-bold uppercase italic text-white">
-                  {topic.title}
-                </h3>
-                <p className="mt-8 text-sm font-semibold leading-6 text-white/85">
-                  {topic.description}
-                </p>
-              </motion.article>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+      <section id="schedule" className="relative bg-[#050505]/42 py-14 sm:py-20 overflow-hidden">
+        {/* Ambient background glow */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-[#ff000f]/[0.03] blur-[120px]" />
 
-      <section id="schedule" className="bg-[#050505]/42 py-14 sm:py-20">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <SectionTitle kicker="Event Schedule" title="Agenda" />
-          <motion.div {...stagger} className="relative mx-auto max-w-5xl">
-            <div className="absolute left-5 top-0 hidden h-full w-px bg-gradient-to-b from-[#ff000f] via-white/30 to-[#ff000f] md:block" />
-            <div className="space-y-5">
-              {agenda.map((item, index) => (
-                <motion.article
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <SectionTitle kicker="Event Schedule" title="Action Plan" />
+
+          <div className="mt-14 space-y-6">
+            {agenda.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <motion.div
                   key={item.phase}
-                  variants={itemMotion}
-                  whileHover={{ x: 8, borderColor: 'rgba(255,0,15,0.55)' }}
-                  className="relative grid gap-4 border border-white/10 bg-black/42 p-5 shadow-[0_14px_44px_rgba(0,0,0,0.28)] md:grid-cols-[160px_1fr_1.2fr] md:pl-14"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{
+                    opacity: 1,
+                    y: 0,
+                    transition: {
+                      type: 'spring',
+                      stiffness: 90,
+                      damping: 18,
+                      delay: index * 0.07,
+                    },
+                  }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  className="group relative"
                 >
-                  <div className="absolute left-[13px] top-7 hidden h-4 w-4 border border-[#ff000f] bg-black shadow-[0_0_18px_rgba(255,0,15,0.75)] md:block" />
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#ff000f]">
-                      Step {String(index + 1).padStart(2, '0')}
-                    </p>
-                    <h3 className="mt-2 text-xl font-bold text-white">{item.phase}</h3>
+                  {/* Icon cube — top-left corner, overlapping the card */}
+                  <div className="absolute -left-1 -top-3 z-20 hidden sm:block">
+                    <div className="grid h-[34px] w-[34px] place-items-center border border-[#ff000f]/50 bg-[#0a0a0a] transition-all duration-400 group-hover:border-[#ff000f] group-hover:shadow-[0_0_20px_rgba(255,0,15,0.4)]">
+                      <Icon className="h-4 w-4 text-[#ff000f]" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/42">Dates</p>
-                    <p className="mt-2 text-base font-bold leading-6 text-white">{item.date}</p>
+
+                  {/* Card */}
+                  <div className="relative overflow-hidden border border-white/[0.06] bg-[#0a0a0a]/80 backdrop-blur-sm transition-all duration-400 group-hover:scale-[1.015] group-hover:border-[#ff000f]/30 group-hover:shadow-[0_12px_48px_rgba(255,0,15,0.1),0_4px_20px_rgba(0,0,0,0.5)] group-hover:z-10">
+                    {/* Top red border line */}
+                    <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#ff000f]/60 via-[#ff000f]/30 to-transparent transition-all duration-400 group-hover:from-[#ff000f] group-hover:via-[#ff000f]/60 group-hover:to-[#ff000f]/20" />
+
+                    {/* Mobile layout */}
+                    <div className="p-5 sm:hidden">
+                      <div className="mb-3 flex items-center gap-3">
+                        <div className="grid h-9 w-9 shrink-0 place-items-center border border-[#ff000f]/50 bg-[#0a0a0a] text-[#ff000f]">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#ff000f]">
+                            Step {String(index + 1).padStart(2, '0')}
+                          </p>
+                          <h3 className="text-sm font-bold text-white">{item.phase}</h3>
+                        </div>
+                      </div>
+                      <p className="text-xs font-semibold text-white/60">{item.date}</p>
+                      <p className="mt-2 text-xs leading-relaxed text-white/40">{item.purpose}</p>
+                    </div>
+
+                    {/* Desktop 3-column layout */}
+                    <div className="hidden sm:grid sm:grid-cols-[1fr_1fr_1.4fr]">
+                      {/* Column 1 — Step + Phase */}
+                      <div className="border-r border-white/[0.06] px-7 py-6 pl-10 transition-colors duration-300 group-hover:border-[#ff000f]/10">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#ff000f] transition-all duration-300 group-hover:tracking-[0.28em]">
+                          Step {String(index + 1).padStart(2, '0')}
+                        </p>
+                        <h3 className="mt-1.5 text-[17px] font-bold text-white">{item.phase}</h3>
+                      </div>
+
+                      {/* Column 2 — Dates */}
+                      <div className="border-r border-white/[0.06] px-7 py-6 transition-colors duration-300 group-hover:border-[#ff000f]/10">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/30">
+                          Dates
+                        </p>
+                        <p className="mt-1.5 text-[15px] font-semibold text-white/80">{item.date}</p>
+                      </div>
+
+                      {/* Column 3 — Content / Purpose */}
+                      <div className="px-7 py-6">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/30">
+                          Content
+                        </p>
+                        <p className="mt-1.5 text-[14px] leading-relaxed text-white/55 transition-colors duration-300 group-hover:text-white/70">{item.purpose}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/42">Content</p>
-                    <p className="mt-2 text-base font-bold text-white">{item.content}</p>
-                    <p className="mt-2 text-sm leading-6 text-white/58">{item.detail}</p>
-                  </div>
-                </motion.article>
-              ))}
-            </div>
-          </motion.div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -663,7 +708,7 @@ export function LandingView() {
       </section>
 
       <footer className="border-t border-white/10 bg-black py-8 text-center text-xs uppercase tracking-[0.28em] text-white/40">
-        ABB Launchpad | College Collaboration Hub
+        ABB Launchpad | Fuelling Ideas, Accelerating Future
       </footer>
     </main>
   );

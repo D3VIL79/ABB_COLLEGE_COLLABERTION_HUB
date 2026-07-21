@@ -48,8 +48,8 @@ export function MouseGlow() {
     const white = '255, 255, 255';
 
     function targetParticleCount() {
-      if (!canvas) return 280;
-      return Math.min(460, Math.max(280, Math.floor(canvas.height / 13)));
+      if (!canvas) return 520;
+      return Math.min(780, Math.max(520, Math.floor(canvas.height / 8)));
     }
 
     function createParticle(): Particle {
@@ -77,8 +77,8 @@ export function MouseGlow() {
         vy: baseVy,
         baseVx,
         baseVy,
-        radius: Math.random() * 1.75 + 0.45,
-        opacity: Math.random() * 0.58 + 0.34,
+        radius: Math.random() * 1.95 + 0.5,
+        opacity: Math.random() * 0.64 + 0.36,
         phase: Math.random() * Math.PI * 2,
         phaseSpeed: Math.random() * 0.02 + 0.01,
       };
@@ -99,7 +99,7 @@ export function MouseGlow() {
       while (particlesRef.current.length < target) {
         particlesRef.current.push(createParticle());
       }
-      if (particlesRef.current.length > target + 80) {
+      if (particlesRef.current.length > target + 120) {
         particlesRef.current = particlesRef.current.slice(0, target);
       }
     }
@@ -159,7 +159,7 @@ export function MouseGlow() {
           const dy = particles[i].y - particles[j].y;
           const distance = Math.sqrt(dx * dx + dy * dy);
           if (distance < connectDistance) {
-            const opacity = (1 - distance / connectDistance) * 0.24;
+            const opacity = (1 - distance / connectDistance) * 0.3;
             ctx.beginPath();
             ctx.strokeStyle = `rgba(${white}, ${opacity})`;
             ctx.lineWidth = 0.58;

@@ -10,7 +10,6 @@ const registrationUrl =
 const navLinks = [
   { id: 'about', label: 'About' },
   { id: 'tracks', label: 'Tracks' },
-  { id: 'topics', label: 'Topics' },
   { id: 'schedule', label: 'Schedule' },
   { id: 'team', label: 'Team' },
 ];
@@ -52,10 +51,10 @@ export function Navbar() {
           />
           <span className="min-w-0">
             <span className="block text-sm font-bold tracking-wide text-white">
-              ABB College Collaboration Hub
+              ABB Launchpad
             </span>
             <span className="block text-[10px] font-normal uppercase tracking-[0.24em] text-white/50">
-              Launchpad
+              College Collaboration
             </span>
           </span>
         </button>
