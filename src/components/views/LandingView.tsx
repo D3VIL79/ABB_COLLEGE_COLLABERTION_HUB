@@ -116,7 +116,7 @@ const agenda = [
 
 const benefits = [
   {
-    title: '3+ Months In-Hand Training',
+    title: '3+ Months On-Hand Training',
     desc: 'Practical 90+ day industry exposure while working around real manufacturing and digital workflows.',
     icon: Cpu,
   },
@@ -466,7 +466,7 @@ export function LandingView() {
 
           <motion.div {...stagger} className="mt-12 grid gap-6 sm:grid-cols-3">
             {[
-              { icon: Users, value: '15+', label: 'Participating Teams' },
+              { icon: Users, value: '6+', label: 'Participating Teams' },
               { icon: Award, value: '16', label: 'Core Team & Mentors' },
               { icon: Zap, value: '90+', label: 'Program Days' },
             ].map((item) => {
