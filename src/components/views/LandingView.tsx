@@ -33,9 +33,6 @@ const timeUnits = [
   ['seconds', 'Secs'],
 ] as const;
 
-const overviewText =
-  'ABB launchpad 2026 is a flagship Industry-Academia innovation program designed to bridge the gap between classroom learning and real-world industrial challenges.';
-
 const trackCards = [
   {
     title: 'Automation',
@@ -443,7 +440,8 @@ export function LandingView() {
       <section id="about" className="border-y border-white/10 bg-black/42 py-14 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <SectionTitle kicker="About This Program" title="Industry-academia innovation, built for real problems" />
-          <div className="grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch">
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-stretch">
+            {/* Left: Nashik Image */}
             <motion.div
               {...fadeUp}
               className="group relative min-h-[380px] overflow-hidden border border-white/10 bg-black"
@@ -471,27 +469,44 @@ export function LandingView() {
                 </p>
               </motion.div>
             </motion.div>
+
+            {/* Right: Poster Image */}
             <motion.div
               {...fadeUp}
               transition={{ ...fadeUp.transition, delay: 0.12 }}
-              className="flex flex-col justify-center border border-white/10 bg-[#090909]/72 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.36)] sm:p-8"
+              className="group relative min-h-[380px] overflow-hidden border border-white/10 bg-black flex items-center justify-center p-2"
             >
-              <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#ff000f]">Overview</p>
-              <p className="mt-5 text-xl font-bold leading-relaxed text-white sm:text-2xl">{overviewText}</p>
-              <p className="mt-6 text-sm leading-7 text-white/70 sm:text-base">
-                From Nashik&apos;s timeless Vedic wisdom and green heritage to future-ready
-                innovations shaping a sustainable tomorrow. The program brings together
-                engineering students and ABB teams to solve practical industrial challenges
-                through mentoring, technology access, and focused project execution.
-              </p>
+              <Image
+                src="/launchpad-poster.jpg"
+                alt="ABB LaunchPad 5th College Collaboration Event Poster"
+                width={785}
+                height={1100}
+                className="h-full max-h-[500px] w-full object-contain transition-transform duration-700 group-hover:scale-[1.02]"
+              />
             </motion.div>
           </div>
 
+          {/* Overview text box below image and poster */}
+          <motion.div
+            {...fadeUp}
+            transition={{ ...fadeUp.transition, delay: 0.18 }}
+            className="mt-8 border border-white/10 bg-[#090909]/72 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.36)] sm:p-8"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.34em] text-[#ff000f]">Overview</p>
+            <p className="mt-4 text-xl font-bold leading-relaxed text-white sm:text-2xl">
+              ABB Launchpad 2026 is a flagship Industry-Academia innovation program designed to bridge the gap between classroom learning and real-world industrial challenges.
+            </p>
+            <p className="mt-4 text-sm leading-7 text-white/70 sm:text-base">
+              This program brings together engineering students and ABB teams to solve practical industrial challenges through mentoring, technology access, and focused project execution.
+            </p>
+          </motion.div>
+
+          {/* Key Impact Stats */}
           <motion.div {...stagger} className="mt-12 grid gap-6 sm:grid-cols-3">
             {[
-              { icon: Users, value: '6+', label: 'Participating Teams' },
-              { icon: Award, value: '16', label: 'Core Team & Mentors' },
-              { icon: Zap, value: '90+', label: 'Program Days' },
+              { icon: Users, value: '100+', label: 'Students Engaged' },
+              { icon: Award, value: '19+', label: 'Real Business Challenges Solved' },
+              { icon: BookOpen, value: '100+', label: 'Learning Hours' },
             ].map((item) => {
               const Icon = item.icon;
               return (
