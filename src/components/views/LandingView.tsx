@@ -556,119 +556,6 @@ export function LandingView() {
         </div>
       </section>
 
-      <section id="benefits" className="bg-[#050505]/42 py-14 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <SectionTitle kicker="Program Impact" title="Key Benefits" />
-          <motion.div {...stagger} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {benefits.map((benefit) => {
-              const Icon = benefit.icon;
-              return (
-                <motion.article
-                  key={benefit.title}
-                  variants={itemMotion}
-                  whileHover={{ y: -8, scale: 1.015 }}
-                  className="relative overflow-hidden border border-white/10 bg-black/46 p-5 shadow-[0_18px_54px_rgba(0,0,0,0.3)]"
-                >
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#ff000f] to-transparent opacity-70" />
-                  <div className="mb-5 grid h-11 w-11 place-items-center border border-[#ff000f]/35 bg-[#ff000f]/10 text-[#ff000f]">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="text-base font-bold text-white">{benefit.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-white/64">{benefit.desc}</p>
-                </motion.article>
-              );
-            })}
-          </motion.div>
-        </div>
-      </section>
-
-      <section className="bg-black/38 py-14 sm:py-20">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.92fr_1.08fr]">
-          <motion.div {...fadeUp} className="border border-white/10 bg-[#090909]/68 p-6 sm:p-8">
-            <div className="mb-6 flex items-center gap-3">
-              <Timer className="h-6 w-6 text-[#ff000f]" />
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/45">Countdown</p>
-                <h2 className="text-2xl font-bold text-white">Registration Opens</h2>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {timeUnits.map(([key, label]) => (
-                <div key={key} className="border border-white/10 bg-black p-4 text-center">
-                  <span className="block text-3xl font-bold tabular-nums text-white">
-                    {String(timeLeft[key]).padStart(2, '0')}
-                  </span>
-                  <span className="mt-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
-                    {label}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-7 space-y-4 border-t border-white/10 pt-6 text-sm text-white/75">
-              <p className="flex items-center gap-3">
-                <CalendarDays className="h-5 w-5 text-[#ff000f]" />
-                03 August 2026, 9:00 AM IST
-              </p>
-              <p className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-[#ff000f]" />
-                ABB India Limited, Satpur, Nashik
-              </p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            {...fadeUp}
-            transition={{ ...fadeUp.transition, delay: 0.12 }}
-            className="min-h-[340px] overflow-hidden border border-white/10 bg-[#090909] shadow-[0_22px_70px_rgba(0,0,0,0.38)]"
-          >
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2755.052340638405!2d73.72655283588146!3d20.002875411003306!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bddec671e4dde8f%3A0xe13d322758665730!2sABB%20India%20Limited!5e0!3m2!1sen!2sus!4v1781852892801!5m2!1sen!2sus"
-              title="ABB India Limited Nashik map"
-              width="100%"
-              height="100%"
-              className="h-full min-h-[340px] w-full"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </motion.div>
-        </div>
-      </section>
-
-      <section id="tracks" className="bg-[#050505]/42 py-14 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <SectionTitle kicker="Innovation Tracks" title="Pilot Scope" />
-          <motion.div {...stagger} className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-            {trackCards.map((track, index) => (
-              <motion.article
-                key={track.title}
-                variants={itemMotion}
-                whileHover={{ y: -10, scale: 1.018 }}
-                className="group text-center"
-              >
-                <div className="relative aspect-[16/10] overflow-hidden border border-white/10 bg-[#111] shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
-                  <Image
-                    src={track.image}
-                    alt={track.title}
-                    width={560}
-                    height={360}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    priority={index === 0}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/76 via-black/10 to-transparent opacity-80" />
-                  <div className="absolute bottom-4 left-4 right-4 text-left">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#ff000f]">
-                      Track {String(index + 1).padStart(2, '0')}
-                    </p>
-                    <p className="mt-1 text-xs font-semibold leading-5 text-white/78">{track.caption}</p>
-                  </div>
-                </div>
-                <h3 className="mt-5 text-sm font-bold uppercase text-white">{track.title}</h3>
-              </motion.article>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
       <section id="schedule" className="relative bg-[#050505]/42 py-14 sm:py-20 overflow-hidden">
         {/* Ambient background glow */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-[#ff000f]/[0.03] blur-[120px]" />
@@ -756,6 +643,119 @@ export function LandingView() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      <section className="bg-black/38 py-14 sm:py-20">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.92fr_1.08fr]">
+          <motion.div {...fadeUp} className="border border-white/10 bg-[#090909]/68 p-6 sm:p-8">
+            <div className="mb-6 flex items-center gap-3">
+              <Timer className="h-6 w-6 text-[#ff000f]" />
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/45">Countdown</p>
+                <h2 className="text-2xl font-bold text-white">Registration Opens</h2>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {timeUnits.map(([key, label]) => (
+                <div key={key} className="border border-white/10 bg-black p-4 text-center">
+                  <span className="block text-3xl font-bold tabular-nums text-white">
+                    {String(timeLeft[key]).padStart(2, '0')}
+                  </span>
+                  <span className="mt-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-7 space-y-4 border-t border-white/10 pt-6 text-sm text-white/75">
+              <p className="flex items-center gap-3">
+                <CalendarDays className="h-5 w-5 text-[#ff000f]" />
+                03 August 2026, 9:00 AM IST
+              </p>
+              <p className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-[#ff000f]" />
+                ABB India Limited, Satpur, Nashik
+              </p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            {...fadeUp}
+            transition={{ ...fadeUp.transition, delay: 0.12 }}
+            className="min-h-[340px] overflow-hidden border border-white/10 bg-[#090909] shadow-[0_22px_70px_rgba(0,0,0,0.38)]"
+          >
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2755.052340638405!2d73.72655283588146!3d20.002875411003306!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bddec671e4dde8f%3A0xe13d322758665730!2sABB%20India%20Limited!5e0!3m2!1sen!2sus!4v1781852892801!5m2!1sen!2sus"
+              title="ABB India Limited Nashik map"
+              width="100%"
+              height="100%"
+              className="h-full min-h-[340px] w-full"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </motion.div>
+        </div>
+      </section>
+
+      <section id="benefits" className="bg-[#050505]/42 py-14 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <SectionTitle kicker="Program Impact" title="Key Benefits" />
+          <motion.div {...stagger} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {benefits.map((benefit) => {
+              const Icon = benefit.icon;
+              return (
+                <motion.article
+                  key={benefit.title}
+                  variants={itemMotion}
+                  whileHover={{ y: -8, scale: 1.015 }}
+                  className="relative overflow-hidden border border-white/10 bg-black/46 p-5 shadow-[0_18px_54px_rgba(0,0,0,0.3)]"
+                >
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#ff000f] to-transparent opacity-70" />
+                  <div className="mb-5 grid h-11 w-11 place-items-center border border-[#ff000f]/35 bg-[#ff000f]/10 text-[#ff000f]">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-white">{benefit.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-white/64">{benefit.desc}</p>
+                </motion.article>
+              );
+            })}
+          </motion.div>
+        </div>
+      </section>
+
+      <section id="tracks" className="bg-black/38 py-14 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <SectionTitle kicker="Innovation Tracks" title="Pilot Scope" />
+          <motion.div {...stagger} className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            {trackCards.map((track, index) => (
+              <motion.article
+                key={track.title}
+                variants={itemMotion}
+                whileHover={{ y: -10, scale: 1.018 }}
+                className="group text-center"
+              >
+                <div className="relative aspect-[16/10] overflow-hidden border border-white/10 bg-[#111] shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+                  <Image
+                    src={track.image}
+                    alt={track.title}
+                    width={560}
+                    height={360}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    priority={index === 0}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/76 via-black/10 to-transparent opacity-80" />
+                  <div className="absolute bottom-4 left-4 right-4 text-left">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#ff000f]">
+                      Track {String(index + 1).padStart(2, '0')}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-white/78">{track.caption}</p>
+                  </div>
+                </div>
+                <h3 className="mt-5 text-sm font-bold uppercase text-white">{track.title}</h3>
+              </motion.article>
+            ))}
+          </motion.div>
         </div>
       </section>
 
