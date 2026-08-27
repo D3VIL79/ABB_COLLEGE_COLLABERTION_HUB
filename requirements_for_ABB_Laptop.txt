@@ -1,0 +1,13 @@
+I need a development setup for a Next.js/React/TypeScript project integrated with Microsoft 365 storage.
+
+Please provide/install:
+- Visual Studio Code
+- Node.js LTS with npm
+- Git
+- Permission to run npm install, npm run dev, npm run build
+- Access to GitHub/Azure DevOps repository
+- Access to Vercel or approved deployment platform
+- SharePoint site access with permission to create Lists and Document Libraries
+- Microsoft Entra app registration access or help creating one
+- Microsoft Graph API permissions for SharePoint Lists and files
+- Optional: Postman, Power Automate, Power BI access
