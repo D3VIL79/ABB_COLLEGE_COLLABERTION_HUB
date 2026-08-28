@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -30,26 +30,19 @@ import {
   ZoomIn,
 } from 'lucide-react';
 import { asset } from '@/utils/asset';
+import { getActionPlans, DEFAULT_ACTION_PLANS, subscribeToDataChanges } from '@/services/dataService';
+import { ActionPlan } from '@/lib/supabase';
 
-const milestones = [
-  { label: 'Registration Open', date: '2026-08-14T09:00:00+05:30', display: '14 August 2026, 9:00 AM IST' },
-  { label: 'Registration Closes', date: '2026-08-21T23:59:59+05:30', display: '21 August 2026, 11:59 PM IST' },
-  { label: 'Kick-off Meeting', date: '2026-08-25T09:00:00+05:30', display: '25 August 2026, 9:00 AM IST' },
-  { label: 'Problem Discovery Begins', date: '2026-09-11T09:00:00+05:30', display: '11 September 2026, 9:00 AM IST' },
-  { label: 'Training & Support', date: '2026-08-25T09:00:00+05:30', display: '25 – 27 August 2026' },
-  { label: 'Problem Discovery Ends', date: '2026-09-11T23:59:59+05:30', display: '11 September 2026' },
-  { label: 'Use Case Development', date: '2026-09-01T09:00:00+05:30', display: 'Sep – Oct – Nov 2026' },
-  { label: 'Jury Round', date: '2026-11-01T09:00:00+05:30', display: 'November 2026' },
-  { label: 'Evaluation & Rewards', date: '2026-12-01T09:00:00+05:30', display: 'December 2026' },
-];
-
-function getActiveMilestone() {
-  const now = Date.now();
-  for (const m of milestones) {
-    if (new Date(m.date).getTime() > now) return m;
-  }
-  return milestones[milestones.length - 1];
-}
+const phaseIconMap: Record<string, React.ElementType> = {
+  'Registration & Team Formation': ClipboardList,
+  'Kick-off Meeting': Handshake,
+  'Problem Discovery & Selection': SearchCheck,
+  'Problem Statement Submission': SearchCheck,
+  'Training & Support': Lightbulb,
+  'Use Case Development': UsersRound,
+  'Jury Round': MessageSquareText,
+  'Evaluation & Rewards': Trophy,
+};
 
 const timeUnits = [
   ['days', 'Days'],
@@ -99,64 +92,7 @@ type ScheduleItem = {
   status: string;
 };
 
-type AgendaItem = {
-  phase: string;
-  date: string;
-  purpose: string;
-  icon: React.ElementType;
-  schedule?: ScheduleItem[];
-};
-
-const agenda: AgendaItem[] = [
-  {
-    phase: 'Registration & Team Formation',
-    date: 'Aug 14 – 21, 2026',
-    purpose: 'Sign up, form teams of 5, and get paired with an industry mentor.',
-    icon: ClipboardList,
-  },
-  {
-    phase: 'Kick-off Meeting',
-    date: 'Aug 25, 2026',
-    purpose: 'Official launch day with ABB leadership, mentors, and networking. Venue: ABB Plant 1, Nashik.',
-    icon: Handshake,
-  },
-  {
-    phase: 'Problem Discovery & Selection',
-    date: '11 September 2026',
-    purpose: 'Identify real industrial challenges and finalize problem statements.',
-    icon: SearchCheck,
-  },
-  {
-    phase: 'Training & Support',
-    date: 'Aug 25 – 27, 2026',
-    purpose: 'Focused workshops on tools, tech, and working methodologies. Runs simultaneously with Problem Discovery.',
-    icon: Lightbulb,
-    schedule: [
-      { day: 'Day 1', date: '25 Aug', title: 'Application Development in ABB', status: 'Core Workshop' },
-      { day: 'Day 2', date: '26 Aug', title: 'Digitalization & AI', status: 'Core Workshop' },
-      { day: 'Day 3', date: '27 Aug', time: '11:00 AM – 12:00 PM', title: 'IoT', status: 'Core Workshop' },
-      { day: 'Day 3', date: '27 Aug', time: '12:00 PM – 1:00 PM', title: 'Innovation using TRIZ methods', status: 'Core Workshop' },
-    ],
-  },
-  {
-    phase: 'Use Case Development',
-    date: 'Sep – Oct – Nov, 2026',
-    purpose: '90+ days of prototyping, iteration, and mentor-guided building.',
-    icon: UsersRound,
-  },
-  {
-    phase: 'Jury Round',
-    date: 'November, 2026',
-    purpose: 'Top 3 solutions shortlisted by an expert evaluation panel.',
-    icon: MessageSquareText,
-  },
-  {
-    phase: 'Evaluation & Rewards',
-    date: 'December, 2026',
-    purpose: 'Final pitches, live demos, winner announcement, and prizes.',
-    icon: Trophy,
-  },
-];
+// Dynamic action plans are fetched via dataService
 
 const partnerColleges = [
   {
@@ -458,7 +394,14 @@ function PeopleGrid({
 
 export function LandingView() {
   const [isPosterOpen, setIsPosterOpen] = useState(false);
-  const [activeMilestone, setActiveMilestone] = useState(getActiveMilestone);
+  const [actionPlans, setActionPlans] = useState<ActionPlan[]>(DEFAULT_ACTION_PLANS);
+  const [activePlan, setActivePlan] = useState<ActionPlan>(() => {
+    return (
+      DEFAULT_ACTION_PLANS.find((p) => p.is_current_timer) ||
+      DEFAULT_ACTION_PLANS[2] ||
+      DEFAULT_ACTION_PLANS[0]
+    );
+  });
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
   const [hoveredStep, setHoveredStep] = useState<string | null>(null);
 
@@ -468,6 +411,28 @@ export function LandingView() {
     minutes: 0,
     seconds: 0,
   });
+
+  const loadPlans = useCallback(async () => {
+    try {
+      const plans = await getActionPlans();
+      setActionPlans(plans);
+      const current =
+        plans.find((p) => p.is_current_timer) ||
+        plans.find((p) => new Date(p.target_date).getTime() > Date.now()) ||
+        plans[plans.length - 1];
+      if (current) {
+        setActivePlan(current);
+      }
+    } catch (e) {
+      console.error('Error loading action plans:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPlans();
+    const unsubscribe = subscribeToDataChanges(loadPlans);
+    return () => unsubscribe();
+  }, [loadPlans]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -485,14 +450,14 @@ export function LandingView() {
 
   useEffect(() => {
     const tick = () => {
-      const m = getActiveMilestone();
-      setActiveMilestone(m);
-      setTimeLeft(getTimeLeft(m.date));
+      if (activePlan?.target_date) {
+        setTimeLeft(getTimeLeft(activePlan.target_date));
+      }
     };
     tick();
     const interval = window.setInterval(tick, 1000);
     return () => window.clearInterval(interval);
-  }, []);
+  }, [activePlan]);
 
   return (
     <main className="relative z-10 overflow-hidden bg-transparent text-white">
@@ -568,8 +533,14 @@ export function LandingView() {
             <div className="mb-5 flex items-center gap-3">
               <Timer className="h-6 w-6 text-[#ff000f]" />
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/45">Up Next</p>
-                <h2 className="text-xl font-bold text-white sm:text-2xl">{activeMilestone.label}</h2>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-[#ff000f] animate-ping" />
+                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#ff000f]">
+                    {activePlan.is_current_timer ? 'Current Phase Deadline' : 'Up Next'}
+                  </p>
+                </div>
+                <h2 className="text-xl font-bold text-white sm:text-2xl">{activePlan.phase}</h2>
+                <p className="text-xs text-white/50">{activePlan.timer_label}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
@@ -587,7 +558,7 @@ export function LandingView() {
             <div className="mt-5 space-y-3 border-t border-white/10 pt-5 text-sm text-white/75">
               <p className="flex items-center gap-3">
                 <CalendarDays className="h-5 w-5 shrink-0 text-[#ff000f]" />
-                {activeMilestone.display}
+                {activePlan.date_display}
               </p>
               <p className="flex items-center gap-3">
                 <MapPin className="h-5 w-5 shrink-0 text-[#ff000f]" />
@@ -765,13 +736,14 @@ export function LandingView() {
           <SectionTitle kicker="Event Schedule" title="Action Plan" />
 
           <div className="mt-14 space-y-6">
-            {agenda.map((item, index) => {
-              const Icon = item.icon;
-              const isExpanded = Boolean(item.schedule && (expandedStep === item.phase || hoveredStep === item.phase));
+            {actionPlans.map((item, index) => {
+              const Icon = phaseIconMap[item.phase] || ClipboardList;
+              const hasSchedule = Boolean(item.schedule_items && item.schedule_items.length > 0);
+              const isExpanded = Boolean(hasSchedule && (expandedStep === item.phase || hoveredStep === item.phase));
 
               return (
                 <motion.div
-                  key={item.phase}
+                  key={item.id || item.phase}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{
                     opacity: 1,
@@ -785,23 +757,33 @@ export function LandingView() {
                   }}
                   viewport={{ once: true, margin: '-40px' }}
                   className="group relative"
-                  onMouseEnter={() => item.schedule && setHoveredStep(item.phase)}
-                  onMouseLeave={() => item.schedule && setHoveredStep(null)}
-                  onClick={() => item.schedule && setExpandedStep(expandedStep === item.phase ? null : item.phase)}
+                  onMouseEnter={() => hasSchedule && setHoveredStep(item.phase)}
+                  onMouseLeave={() => hasSchedule && setHoveredStep(null)}
+                  onClick={() => hasSchedule && setExpandedStep(expandedStep === item.phase ? null : item.phase)}
                 >
                   {/* Icon cube — top-left corner, overlapping the card */}
                   <div className="absolute -left-1 -top-3 z-20 hidden sm:block">
-                    <div className="grid h-[34px] w-[34px] place-items-center border border-[#ff000f]/50 bg-[#0a0a0a] transition-all duration-400 group-hover:border-[#ff000f] group-hover:shadow-[0_0_20px_rgba(255,0,15,0.4)]">
+                    <div className={`grid h-[34px] w-[34px] place-items-center border bg-[#0a0a0a] transition-all duration-400 ${
+                      item.is_current_timer ? 'border-[#ff000f] shadow-[0_0_16px_rgba(255,0,15,0.6)]' : 'border-[#ff000f]/50 group-hover:border-[#ff000f] group-hover:shadow-[0_0_20px_rgba(255,0,15,0.4)]'
+                    }`}>
                       <Icon className="h-4 w-4 text-[#ff000f]" />
                     </div>
                   </div>
 
                   {/* Card */}
                   <div className={`relative overflow-hidden border bg-[#0a0a0a]/80 backdrop-blur-sm transition-all duration-400 group-hover:scale-[1.015] group-hover:shadow-[0_12px_48px_rgba(255,0,15,0.1),0_4px_20px_rgba(0,0,0,0.5)] group-hover:z-10 ${
-                    item.schedule ? 'cursor-pointer hover:border-[#ff000f]/50' : 'group-hover:border-[#ff000f]/30'
-                  } ${isExpanded ? 'border-[#ff000f]/60 shadow-[0_12px_48px_rgba(255,0,15,0.15)]' : 'border-white/[0.06]'}`}>
+                    item.is_current_timer
+                      ? 'border-[#ff000f]/80 shadow-[0_0_30px_rgba(255,0,15,0.2)]'
+                      : isExpanded
+                      ? 'border-[#ff000f]/60 shadow-[0_12px_48px_rgba(255,0,15,0.15)]'
+                      : 'border-white/[0.06] group-hover:border-[#ff000f]/30'
+                  } ${hasSchedule ? 'cursor-pointer hover:border-[#ff000f]/50' : ''}`}>
                     {/* Top red border line */}
-                    <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#ff000f]/60 via-[#ff000f]/30 to-transparent transition-all duration-400 group-hover:from-[#ff000f] group-hover:via-[#ff000f]/60 group-hover:to-[#ff000f]/20" />
+                    <div className={`absolute inset-x-0 top-0 h-[2px] ${
+                      item.is_current_timer
+                        ? 'bg-[#ff000f] shadow-[0_0_10px_#ff000f]'
+                        : 'bg-gradient-to-r from-[#ff000f]/60 via-[#ff000f]/30 to-transparent group-hover:from-[#ff000f] group-hover:via-[#ff000f]/60 group-hover:to-[#ff000f]/20'
+                    }`} />
 
                     {/* Mobile layout */}
                     <div className="p-5 sm:hidden">
@@ -811,17 +793,24 @@ export function LandingView() {
                             <Icon className="h-4 w-4" />
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#ff000f]">
-                              Step {String(index + 1).padStart(2, '0')}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#ff000f]">
+                                Step {String(item.step_number || index + 1).padStart(2, '0')}
+                              </p>
+                              {item.is_current_timer && (
+                                <span className="rounded bg-[#ff000f]/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#ff000f] border border-[#ff000f]/40 animate-pulse">
+                                  Current Phase
+                                </span>
+                              )}
+                            </div>
                             <h3 className="text-sm font-bold text-white">{item.phase}</h3>
                           </div>
                         </div>
                       </div>
-                      <p className="text-xs font-semibold text-white/60">{item.date}</p>
+                      <p className="text-xs font-semibold text-white/60">{item.date_display}</p>
                       <p className="mt-2 text-xs leading-relaxed text-white/40">{item.purpose}</p>
 
-                      {item.schedule && (
+                      {hasSchedule && (
                         <div className="mt-4 flex items-center gap-2">
                           <span className="inline-flex items-center gap-1.5 rounded-full border border-[#ff000f]/50 bg-[#ff000f]/15 px-3 py-1 text-xs font-bold text-white shadow-[0_0_12px_rgba(255,0,15,0.3)]">
                             <Sparkles className="h-3.5 w-3.5 text-[#ff000f] animate-pulse" />
@@ -837,13 +826,20 @@ export function LandingView() {
                       {/* Column 1 — Step + Phase */}
                       <div className="border-r border-white/[0.06] px-7 py-6 pl-10 transition-colors duration-300 group-hover:border-[#ff000f]/10 flex flex-col justify-between">
                         <div>
-                          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#ff000f] transition-all duration-300 group-hover:tracking-[0.28em]">
-                            Step {String(index + 1).padStart(2, '0')}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#ff000f] transition-all duration-300 group-hover:tracking-[0.28em]">
+                              Step {String(item.step_number || index + 1).padStart(2, '0')}
+                            </p>
+                            {item.is_current_timer && (
+                              <span className="rounded bg-[#ff000f]/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#ff000f] border border-[#ff000f]/40 animate-pulse">
+                                Current Phase
+                              </span>
+                            )}
+                          </div>
                           <h3 className="mt-1.5 text-[17px] font-bold text-white">{item.phase}</h3>
                         </div>
 
-                        {item.schedule && (
+                        {hasSchedule && (
                           <div className="mt-3">
                             <span className="inline-flex items-center gap-1.5 rounded-full border border-[#ff000f]/50 bg-[#ff000f]/15 px-3 py-1 text-[11px] font-bold text-white shadow-[0_0_12px_rgba(255,0,15,0.3)] transition-all duration-300 hover:bg-[#ff000f]/25">
                               <Sparkles className="h-3.5 w-3.5 text-[#ff000f] animate-pulse" />
@@ -859,7 +855,7 @@ export function LandingView() {
                         <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/30">
                           Dates
                         </p>
-                        <p className="mt-1.5 text-[15px] font-semibold text-white/80">{item.date}</p>
+                        <p className="mt-1.5 text-[15px] font-semibold text-white/80">{item.date_display}</p>
                       </div>
 
                       {/* Column 3 — Content / Purpose */}
@@ -871,9 +867,9 @@ export function LandingView() {
                       </div>
                     </div>
 
-                    {/* Animated Dropdown Schedule for Training & Support */}
+                    {/* Animated Dropdown Schedule for Training & Support or any plan with schedule items */}
                     <AnimatePresence>
-                      {isExpanded && item.schedule && (
+                      {isExpanded && item.schedule_items && (
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
@@ -885,16 +881,16 @@ export function LandingView() {
                             <div className="flex items-center gap-2">
                               <Sparkles className="h-4 w-4 text-[#ff000f]" />
                               <span className="text-xs font-bold uppercase tracking-[0.2em] text-white">
-                                Daily Training Schedule (Aug 25 – 27, 2026)
+                                {item.phase} Schedule ({item.date_display})
                               </span>
                             </div>
                             <span className="rounded bg-[#ff000f]/20 px-2.5 py-0.5 text-[11px] font-bold text-[#ff000f] border border-[#ff000f]/40">
-                              Aug 25 – 27, 2026
+                              {item.date_display}
                             </span>
                           </div>
 
                           <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-                            {item.schedule.map((session, sIdx) => (
+                            {item.schedule_items.map((session, sIdx) => (
                               <div
                                 key={`${session.date}-${sIdx}`}
                                 className="group/session relative overflow-hidden rounded-md border border-white/10 bg-[#0d0d0d] p-4 transition-all duration-300 hover:border-[#ff000f]/60 hover:bg-black hover:shadow-[0_4px_20px_rgba(255,0,15,0.25)]"
