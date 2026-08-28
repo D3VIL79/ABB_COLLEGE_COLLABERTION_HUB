@@ -2,9 +2,27 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
-import { Menu, X, Bell, Shield, Monitor, Download, Bot, AlertTriangle, AlertCircle, Sparkles } from 'lucide-react';
+import {
+  Menu,
+  X,
+  Bell,
+  Shield,
+  Monitor,
+  Download,
+  Bot,
+  AlertTriangle,
+  AlertCircle,
+  Megaphone,
+  Info,
+  Calendar,
+} from 'lucide-react';
 import { asset } from '@/utils/asset';
-import { getSiteSettings, getActiveNotification, DEFAULT_SITE_SETTINGS, subscribeToDataChanges } from '@/services/dataService';
+import {
+  getSiteSettings,
+  getGlobalNotifications,
+  DEFAULT_SITE_SETTINGS,
+  subscribeToDataChanges,
+} from '@/services/dataService';
 import { SiteSettings, GlobalNotification } from '@/lib/supabase';
 
 const navLinks = [
@@ -61,15 +79,18 @@ const securityGuidelines = [
   },
 ];
 
-function SecurityNoticeModal({
+function NotificationCenterModal({
   isOpen,
   onClose,
-  activeNotification,
+  notifications,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  activeNotification: GlobalNotification | null;
+  notifications: GlobalNotification[];
 }) {
+  const activeNotifications = notifications.filter((n) => n.is_active);
+  const [activeTab, setActiveTab] = useState<'announcements' | 'guidelines'>('announcements');
+
   useEffect(() => {
     if (!isOpen) return;
     document.body.style.overflow = 'hidden';
@@ -82,6 +103,13 @@ function SecurityNoticeModal({
       window.removeEventListener('keydown', handleKey);
     };
   }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Default to announcements if active ones exist, otherwise guidelines
+      setActiveTab(activeNotifications.length > 0 ? 'announcements' : 'guidelines');
+    }
+  }, [isOpen, activeNotifications.length]);
 
   if (!isOpen) return null;
 
@@ -96,7 +124,7 @@ function SecurityNoticeModal({
 
       {/* Modal */}
       <div
-        className="relative max-h-[85vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-red-500/20 bg-gradient-to-b from-[#1a0a0a] to-[#0d0d0d] shadow-[0_0_60px_rgba(255,0,15,0.15)]"
+        className="relative max-h-[88vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-red-500/20 bg-gradient-to-b from-[#1a0a0a] to-[#0d0d0d] shadow-[0_0_60px_rgba(255,0,15,0.2)]"
         style={{ animation: 'modalSlideUp 0.3s ease-out' }}
       >
         {/* Header */}
@@ -104,10 +132,12 @@ function SecurityNoticeModal({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/15 ring-1 ring-red-500/30">
-                <Shield className="h-5 w-5 text-red-400" />
+                <Bell className="h-5 w-5 text-red-400" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-white tracking-wide">Notifications & Guidelines</h2>
+                <h2 className="text-base font-bold text-white tracking-wide">
+                  Notification Center &amp; Guidelines
+                </h2>
                 <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-red-400/80">
                   ABB College Collaboration Hub
                 </p>
@@ -115,83 +145,157 @@ function SecurityNoticeModal({
             </div>
             <button
               onClick={onClose}
-              className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 text-white/60 transition-all hover:border-red-500/30 hover:bg-red-500/10 hover:text-white"
+              className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 text-white/60 transition-all hover:border-red-500/30 hover:bg-red-500/10 hover:text-white cursor-pointer"
               aria-label="Close notice"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
+
+          {/* Modal Tabs */}
+          <div className="mt-4 flex gap-2 border-t border-white/10 pt-3">
+            <button
+              onClick={() => setActiveTab('announcements')}
+              className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'announcements'
+                  ? 'border border-[#ff000f]/60 bg-[#ff000f]/20 text-[#ff000f]'
+                  : 'border border-transparent text-white/60 hover:text-white'
+              }`}
+            >
+              <Megaphone className="h-3.5 w-3.5" />
+              <span>Announcements</span>
+              {activeNotifications.length > 0 && (
+                <span className="rounded-full bg-[#ff000f] px-1.5 py-0.2 text-[10px] font-bold text-white">
+                  {activeNotifications.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('guidelines')}
+              className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                activeTab === 'guidelines'
+                  ? 'border border-red-500/60 bg-red-500/20 text-red-400'
+                  : 'border border-transparent text-white/60 hover:text-white'
+              }`}
+            >
+              <Shield className="h-3.5 w-3.5" />
+              <span>IT Security Guidelines</span>
+            </button>
+          </div>
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto max-h-[calc(85vh-140px)] px-6 py-5 space-y-4">
-          {/* Active Global Notification if present */}
-          {activeNotification && activeNotification.is_active && (
-            <div className="rounded-xl border border-red-500/40 bg-[#ff000f]/10 p-4 shadow-[0_0_24px_rgba(255,0,15,0.15)]">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-red-400">
-                  Latest Admin Broadcast ({activeNotification.type})
-                </span>
-              </div>
-              <h3 className="text-sm font-bold text-white">{activeNotification.title}</h3>
-              <p className="mt-1.5 text-xs leading-relaxed text-white/80">
-                {activeNotification.message}
-              </p>
+        <div className="overflow-y-auto max-h-[calc(88vh-180px)] px-6 py-5 space-y-4">
+          {/* TAB 1: ANNOUNCEMENTS */}
+          {activeTab === 'announcements' && (
+            <div className="space-y-3">
+              {activeNotifications.length === 0 ? (
+                <div className="rounded-xl border border-white/5 bg-white/[0.02] p-8 text-center">
+                  <Bell className="mx-auto h-8 w-8 text-white/30 mb-2" />
+                  <h3 className="text-sm font-bold text-white">No New Announcements</h3>
+                  <p className="mt-1 text-xs text-white/50">
+                    You are all caught up! New updates from the event administration will appear here.
+                  </p>
+                </div>
+              ) : (
+                activeNotifications.map((notif) => (
+                  <div
+                    key={notif.id}
+                    className="relative overflow-hidden rounded-xl border border-red-500/30 bg-gradient-to-r from-[#1c0505]/70 to-[#0e0707]/70 p-4 shadow-[0_4px_20px_rgba(255,0,15,0.12)]"
+                  >
+                    <div className="absolute inset-y-0 left-0 w-1 bg-[#ff000f]" />
+                    <div className="flex items-center gap-2 mb-2 pl-2">
+                      {notif.type === 'urgent' ? (
+                        <span className="inline-flex items-center gap-1 rounded bg-red-500/20 border border-red-500/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-400">
+                          <AlertCircle className="h-3 w-3 animate-pulse" />
+                          Important Notice
+                        </span>
+                      ) : notif.type === 'announcement' ? (
+                        <span className="inline-flex items-center gap-1 rounded bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                          <Megaphone className="h-3 w-3" />
+                          Announcement
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded bg-cyan-500/20 border border-cyan-500/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-300">
+                          <Info className="h-3 w-3" />
+                          Update
+                        </span>
+                      )}
+
+                      {notif.created_at && (
+                        <span className="text-[10px] text-white/40 flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(notif.created_at).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="pl-2">
+                      <h3 className="text-sm font-bold text-white">{notif.title}</h3>
+                      <p className="mt-1 text-xs leading-relaxed text-white/80">{notif.message}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
 
-          {/* Intro */}
-          <div className="rounded-xl border border-amber-500/15 bg-amber-500/5 px-4 py-3">
-            <p className="text-[13px] leading-relaxed text-amber-200/80">
-              As part of the <strong className="text-amber-100">ABB College Collaboration Hub</strong> program, company laptops and tools will be provided to support your project work. All participants are required to strictly adhere to the following guidelines.
-            </p>
-          </div>
-
-          {/* Guidelines */}
-          {securityGuidelines.map((section, i) => {
-            const Icon = section.icon;
-            return (
-              <div
-                key={i}
-                className="group rounded-xl border border-white/[0.04] bg-white/[0.015] p-4 transition-colors hover:border-red-500/10 hover:bg-white/[0.025]"
-              >
-                <div className="mb-3 flex items-center gap-2.5">
-                  <Icon className="h-4 w-4 text-red-400/80 shrink-0" />
-                  <h3 className="text-[13.5px] font-bold text-white/90">{section.title}</h3>
-                </div>
-                <ul className="space-y-2 pl-6">
-                  {section.points.map((point, j) => (
-                    <li key={j} className="relative text-[12.5px] leading-[1.65] text-white/55">
-                      <span className="absolute -left-4 top-[7px] h-1.5 w-1.5 rounded-full bg-red-500/40" />
-                      {point}
-                    </li>
-                  ))}
-                </ul>
+          {/* TAB 2: IT SECURITY GUIDELINES */}
+          {activeTab === 'guidelines' && (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-amber-500/15 bg-amber-500/5 px-4 py-3">
+                <p className="text-[13px] leading-relaxed text-amber-200/80">
+                  As part of the <strong className="text-amber-100">ABB College Collaboration Hub</strong> program, company laptops and tools will be provided to support your project work. All participants are required to strictly adhere to the following guidelines.
+                </p>
               </div>
-            );
-          })}
 
-          {/* Warning footer */}
-          <div className="rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-3">
-            <p className="text-[12.5px] font-semibold leading-relaxed text-red-300/90">
-              ⚠️ Failure to comply with these guidelines may result in the revocation of access and other actions as deemed appropriate by ABB.
-            </p>
-          </div>
+              {securityGuidelines.map((section, i) => {
+                const Icon = section.icon;
+                return (
+                  <div
+                    key={i}
+                    className="group rounded-xl border border-white/[0.04] bg-white/[0.015] p-4 transition-colors hover:border-red-500/10 hover:bg-white/[0.025]"
+                  >
+                    <div className="mb-3 flex items-center gap-2.5">
+                      <Icon className="h-4 w-4 text-red-400/80 shrink-0" />
+                      <h3 className="text-[13.5px] font-bold text-white/90">{section.title}</h3>
+                    </div>
+                    <ul className="space-y-2 pl-6">
+                      {section.points.map((point, j) => (
+                        <li key={j} className="relative text-[12.5px] leading-[1.65] text-white/55">
+                          <span className="absolute -left-4 top-[7px] h-1.5 w-1.5 rounded-full bg-red-500/40" />
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
 
-          {/* Sign-off */}
-          <p className="pt-2 pb-1 text-[12px] text-white/30 text-center">
-            — ABB College Collaboration Hub Team
-          </p>
+              <div className="rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-3">
+                <p className="text-[12.5px] font-semibold leading-relaxed text-red-300/90">
+                  ⚠️ Failure to comply with these guidelines may result in the revocation of access and other actions as deemed appropriate by ABB.
+                </p>
+              </div>
+
+              <p className="pt-2 pb-1 text-[12px] text-white/30 text-center">
+                — ABB College Collaboration Hub Team
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer action */}
         <div className="sticky bottom-0 border-t border-white/[0.06] bg-[#0d0d0d]/95 backdrop-blur-md px-6 py-3">
           <button
             onClick={onClose}
-            className="w-full rounded-lg border border-red-500/30 bg-red-500/10 py-2.5 text-xs font-bold uppercase tracking-[0.18em] text-red-400 transition-all hover:bg-red-500 hover:text-white hover:shadow-[0_0_24px_rgba(255,0,15,0.3)]"
+            className="w-full rounded-lg border border-red-500/30 bg-red-500/10 py-2.5 text-xs font-bold uppercase tracking-[0.18em] text-red-400 transition-all hover:bg-red-500 hover:text-white hover:shadow-[0_0_24px_rgba(255,0,15,0.3)] cursor-pointer"
           >
-            I Understand & Acknowledge
+            I Understand &amp; Acknowledge
           </button>
         </div>
       </div>
@@ -226,7 +330,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [showNotice, setShowNotice] = useState(false);
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
-  const [activeNotification, setActiveNotification] = useState<GlobalNotification | null>(null);
+  const [notifications, setNotifications] = useState<GlobalNotification[]>([]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 18);
@@ -237,9 +341,9 @@ export function Navbar() {
 
   const loadData = useCallback(async () => {
     try {
-      const [s, n] = await Promise.all([getSiteSettings(), getActiveNotification()]);
+      const [s, n] = await Promise.all([getSiteSettings(), getGlobalNotifications()]);
       setSettings(s);
-      setActiveNotification(n);
+      setNotifications(n);
     } catch (e) {
       console.error('Navbar loadData error:', e);
     }
@@ -257,6 +361,8 @@ export function Navbar() {
     setIsOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  const activeCount = notifications.filter((n) => n.is_active).length;
 
   return (
     <>
@@ -301,22 +407,29 @@ export function Navbar() {
               ))}
             </div>
 
-            {/* Notification & Security Bell */}
+            {/* Notification & Security Alarm Bell Button */}
             <button
               onClick={() => setShowNotice(true)}
-              className="relative grid h-10 w-10 place-items-center rounded-lg border border-white/10 text-white/60 transition-all hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
-              aria-label="View notifications and security notice"
-              title="Notifications & IT Security Guidelines"
+              className="relative grid h-10 w-10 place-items-center rounded-lg border border-white/10 text-white/70 transition-all hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
+              aria-label="View notifications and announcements"
+              title="Notifications & Guidelines"
             >
               <Bell className="h-[18px] w-[18px]" />
-              {/* Pulsing red dot */}
-              <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5">
-                <span
-                  className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"
-                  style={{ animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' }}
-                />
-                <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-red-500 ring-2 ring-black" />
-              </span>
+
+              {/* Alarm Badge Counter / Pulsing red indicator */}
+              {activeCount > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff000f] px-1 text-[10px] font-bold text-white ring-2 ring-black shadow-[0_0_10px_#ff000f]">
+                  {activeCount}
+                </span>
+              ) : (
+                <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5">
+                  <span
+                    className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"
+                    style={{ animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' }}
+                  />
+                  <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-red-500 ring-2 ring-black" />
+                </span>
+              )}
             </button>
 
             {/* Dynamic Registration Button */}
@@ -325,7 +438,7 @@ export function Navbar() {
                 href={settings.registration_url}
                 target="_blank"
                 rel="noreferrer"
-                className="border border-[#ff000f] bg-[#ff000f] px-5 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white shadow-[0_0_22px_rgba(255,0,15,0.28)] transition-all hover:bg-white hover:text-black"
+                className="border border-[#ff000f] bg-[#ff000f] px-5 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white shadow-[0_0_22px_rgba(255,0,15,0.28)] transition-all hover:bg-white hover:text-black cursor-pointer"
               >
                 {settings.registration_button_text || 'Register'}
               </a>
@@ -344,16 +457,22 @@ export function Navbar() {
             <button
               onClick={() => setShowNotice(true)}
               className="relative grid h-10 w-10 place-items-center border border-white/10 text-white/70"
-              aria-label="View notifications and security notice"
+              aria-label="View notifications and announcements"
             >
               <Bell className="h-[18px] w-[18px]" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3">
-                <span
-                  className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"
-                  style={{ animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' }}
-                />
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500 ring-2 ring-black" />
-              </span>
+              {activeCount > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff000f] px-1 text-[10px] font-bold text-white ring-2 ring-black">
+                  {activeCount}
+                </span>
+              ) : (
+                <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3">
+                  <span
+                    className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"
+                    style={{ animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' }}
+                  />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500 ring-2 ring-black" />
+                </span>
+              )}
             </button>
             <button
               onClick={() => setIsOpen((value) => !value)}
@@ -394,11 +513,11 @@ export function Navbar() {
         )}
       </nav>
 
-      {/* Security Notice & Notification Modal */}
-      <SecurityNoticeModal
+      {/* Notification Center & Guidelines Modal */}
+      <NotificationCenterModal
         isOpen={showNotice}
         onClose={handleCloseNotice}
-        activeNotification={activeNotification}
+        notifications={notifications}
       />
 
       {/* Ping animation keyframes */}
