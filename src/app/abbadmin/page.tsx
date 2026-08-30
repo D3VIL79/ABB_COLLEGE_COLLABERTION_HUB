@@ -27,6 +27,7 @@ import {
   Layers,
   ArrowRight,
   Eye,
+  RotateCcw,
 } from 'lucide-react';
 import { asset } from '@/utils/asset';
 import {
@@ -48,6 +49,7 @@ import {
   setCurrentTimerPlan,
   DEFAULT_SITE_SETTINGS,
   subscribeToDataChanges,
+  resetToDefaultActionPlans,
 } from '@/services/dataService';
 
 export default function AdminPage() {
@@ -300,6 +302,23 @@ export default function AdminPage() {
     }
   };
 
+  // Restore All Default Plans & Full Training Track
+  const handleRestoreDefaultPlans = async () => {
+    if (!confirm('Are you sure you want to restore all 7 default action plans and full training schedules?')) return;
+    try {
+      setIsLoading(true);
+      const restored = await resetToDefaultActionPlans();
+      setActionPlans(restored);
+      await loadData();
+      showToast('Restored all 7 plans and complete training track!');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to restore action plans', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Copy SQL script to clipboard
   const copySqlSchema = () => {
     const sqlContent = `-- ==============================================================================
@@ -456,6 +475,17 @@ ON CONFLICT DO NOTHING;`;
             <p className="text-[11px]">
               Default test access: <code className="text-white/70">admin@abb.com</code> / <code className="text-white/70">ABBadmin2026!</code>
             </p>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthEmail('admin@abb.com');
+                setAuthPassword('ABBadmin2026!');
+                setAuthError('');
+              }}
+              className="mt-2 text-xs font-semibold text-[#ff000f] hover:underline cursor-pointer flex items-center justify-center gap-1 mx-auto"
+            >
+              <span>⚡ Click to auto-fill credentials</span>
+            </button>
           </div>
 
           <div className="mt-5 text-center">
@@ -628,13 +658,24 @@ ON CONFLICT DO NOTHING;`;
                   Update dates, months, and phases. Choose which milestone powers the main Hero timer (e.g. Problem Statement Submission).
                 </p>
               </div>
-              <button
-                onClick={loadData}
-                className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3.5 py-2 text-xs font-semibold text-white/70 hover:border-[#ff000f] hover:text-white transition-colors cursor-pointer"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-                <span>Refresh Plans</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRestoreDefaultPlans}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#ff000f]/40 bg-[#ff000f]/10 px-3.5 py-2 text-xs font-bold text-[#ff000f] hover:bg-[#ff000f] hover:text-white transition-all cursor-pointer"
+                  title="Restores all 7 original action plans and complete training track with 8 workshops"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  <span>Restore All Plans &amp; Trainings</span>
+                </button>
+
+                <button
+                  onClick={loadData}
+                  className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3.5 py-2 text-xs font-semibold text-white/70 hover:border-[#ff000f] hover:text-white transition-colors cursor-pointer"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                  <span>Refresh Plans</span>
+                </button>
+              </div>
             </div>
 
             {/* Current Active Timer Highlight */}

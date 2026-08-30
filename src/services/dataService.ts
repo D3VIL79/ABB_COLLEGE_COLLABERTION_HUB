@@ -83,17 +83,21 @@ export const DEFAULT_ACTION_PLANS: ActionPlan[] = [
     id: 'be83744c-f421-4e42-800c-58b445cfff05',
     step_number: 4,
     phase: 'Training & Support',
-    date_display: 'Sep 2 – 3, 2026',
+    date_display: 'Aug 25 – 27 & Sep 2 – 3, 2026',
     target_date: '2026-09-03T17:00:00+05:30',
     timer_label: 'Training Workshops In',
     purpose:
-      'Focused workshops on tools, tech, and working methodologies. Faculty members are requested to arrive 15 minutes prior for gate pass arrangements.',
+      'Comprehensive hands-on training tracks including foundational technology sessions and advanced industry workshops. Faculty members are requested to arrive 15 minutes prior for gate pass arrangements.',
     is_current_timer: false,
     schedule_items: [
-      { day: 'Day 1', date: '2 Sep', time: '10:00 AM – 12:00 PM', title: 'Digitalization & AI at ABB', status: 'Core Workshop' },
-      { day: 'Day 1', date: '2 Sep', time: '12:00 PM – 1:00 PM', title: 'Application Development @ ABB', status: 'Core Workshop' },
-      { day: 'Day 2', date: '3 Sep', time: '2:00 PM – 4:00 PM', title: 'Innovation Using TRIZ Method', status: 'Core Workshop' },
-      { day: 'Day 2', date: '3 Sep', time: '4:00 PM – 5:00 PM', title: 'IoT for Manufacturing', status: 'Core Workshop' },
+      { day: 'Day 1 (Aug)', date: '25 Aug', time: 'Full Day', title: 'Application Development in ABB', status: 'Completed' },
+      { day: 'Day 2 (Aug)', date: '26 Aug', time: 'Full Day', title: 'Digitalization & AI Foundations', status: 'Completed' },
+      { day: 'Day 3 (Aug)', date: '27 Aug', time: '11:00 AM – 12:00 PM', title: 'IoT Fundamentals', status: 'Completed' },
+      { day: 'Day 3 (Aug)', date: '27 Aug', time: '12:00 PM – 1:00 PM', title: 'Innovation using TRIZ methods', status: 'Completed' },
+      { day: 'Day 1 (Sep)', date: '2 Sep', time: '10:00 AM – 12:00 PM', title: 'Digitalization & AI at ABB', status: 'Upcoming / Live' },
+      { day: 'Day 1 (Sep)', date: '2 Sep', time: '12:00 PM – 1:00 PM', title: 'Application Development @ ABB', status: 'Upcoming / Live' },
+      { day: 'Day 2 (Sep)', date: '3 Sep', time: '2:00 PM – 4:00 PM', title: 'Innovation Using TRIZ Method', status: 'Upcoming / Live' },
+      { day: 'Day 2 (Sep)', date: '3 Sep', time: '4:00 PM – 5:00 PM', title: 'IoT for Manufacturing', status: 'Upcoming / Live' },
     ],
   },
   {
@@ -576,3 +580,26 @@ export async function setCurrentTimerPlan(id: string): Promise<void> {
 
   notifyDataChange();
 }
+
+export async function resetToDefaultActionPlans(): Promise<ActionPlan[]> {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(
+      LOCAL_STORAGE_KEYS.ACTION_PLANS,
+      JSON.stringify(DEFAULT_ACTION_PLANS)
+    );
+  }
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      for (const plan of DEFAULT_ACTION_PLANS) {
+        await supabase.from('action_plans').upsert(plan);
+      }
+    } catch (e) {
+      console.error('Failed to reset action plans in Supabase:', e);
+    }
+  }
+
+  notifyDataChange();
+  return DEFAULT_ACTION_PLANS;
+}
+
