@@ -361,7 +361,7 @@ VALUES
 (1, 'Registration & Team Formation', 'Aug 14 – 21, 2026', '2026-08-21T23:59:59+05:30', 'Registration Closes In', 'Sign up, form teams of 5, and get paired with an industry mentor.', false),
 (2, 'Kick-off Meeting', 'Aug 25, 2026', '2026-08-25T09:00:00+05:30', 'Kick-off Meeting Starts In', 'Official launch day with ABB leadership, mentors, and networking.', false),
 (3, 'Problem Statement Submission', '11 September 2026', '2026-09-11T23:59:59+05:30', 'Problem Statement Submission In', 'Identify real industrial challenges, finalize problem statements, and submit proposal.', true),
-(4, 'Training & Support', 'Aug 25 – 27, 2026', '2026-08-27T18:00:00+05:30', 'Training Workshops In', 'Focused workshops on tools, tech, and working methodologies.', false),
+(4, 'Training & Support', 'Sep 2 – 3, 2026', '2026-09-03T17:00:00+05:30', 'Training Workshops In', 'Focused workshops on tools, tech, and working methodologies.', false),
 (5, 'Use Case Development', 'Sep – Oct – Nov, 2026', '2026-11-01T09:00:00+05:30', 'Development Phase Ends In', '90+ days of prototyping, iteration, and mentor-guided building.', false),
 (6, 'Jury Round', 'November, 2026', '2026-11-20T09:00:00+05:30', 'Jury Evaluation In', 'Top 3 solutions shortlisted by an expert evaluation panel.', false),
 (7, 'Evaluation & Rewards', 'December, 2026', '2026-12-15T09:00:00+05:30', 'Grand Finale In', 'Final pitches, live demos, winner announcement, and prizes.', false)

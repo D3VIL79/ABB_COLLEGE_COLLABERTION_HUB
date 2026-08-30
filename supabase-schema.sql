@@ -146,16 +146,16 @@ INSERT INTO public.action_plans (step_number, phase, date_display, target_date, 
 SELECT
   4,
   'Training & Support',
-  'Aug 25 – 27, 2026',
-  '2026-08-27T18:00:00+05:30'::timestamptz,
+  'Sep 2 – 3, 2026',
+  '2026-09-03T17:00:00+05:30'::timestamptz,
   'Training Workshops In',
-  'Focused workshops on tools, tech, and working methodologies. Runs simultaneously with Problem Discovery.',
+  'Focused workshops on tools, tech, and working methodologies. Faculty members are requested to arrive 15 minutes prior for gate pass arrangements.',
   false,
   '[
-    {"day": "Day 1", "date": "25 Aug", "title": "Application Development in ABB", "status": "Core Workshop"},
-    {"day": "Day 2", "date": "26 Aug", "title": "Digitalization & AI", "status": "Core Workshop"},
-    {"day": "Day 3", "date": "27 Aug", "time": "11:00 AM – 12:00 PM", "title": "IoT", "status": "Core Workshop"},
-    {"day": "Day 3", "date": "27 Aug", "time": "12:00 PM – 1:00 PM", "title": "Innovation using TRIZ methods", "status": "Core Workshop"}
+    {"day": "Day 1", "date": "2 Sep", "time": "10:00 AM – 12:00 PM", "title": "Digitalization & AI at ABB", "status": "Core Workshop"},
+    {"day": "Day 1", "date": "2 Sep", "time": "12:00 PM – 1:00 PM", "title": "Application Development @ ABB", "status": "Core Workshop"},
+    {"day": "Day 2", "date": "3 Sep", "time": "2:00 PM – 4:00 PM", "title": "Innovation Using TRIZ Method", "status": "Core Workshop"},
+    {"day": "Day 2", "date": "3 Sep", "time": "4:00 PM – 5:00 PM", "title": "IoT for Manufacturing", "status": "Core Workshop"}
   ]'::jsonb
 WHERE NOT EXISTS (SELECT 1 FROM public.action_plans WHERE step_number = 4);
 

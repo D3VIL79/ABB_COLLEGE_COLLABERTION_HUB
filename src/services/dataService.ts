@@ -34,9 +34,9 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
 export const DEFAULT_NOTIFICATIONS: GlobalNotification[] = [
   {
     id: '768394be-0719-453e-8a6a-9b22c2a2a1c8',
-    title: 'Problem Statement Submission Ongoing',
+    title: 'Revised Training Schedule (2 & 3 September 2026)',
     message:
-      'Problem Statement Discovery & Submission is currently live! All teams should submit their final problem statements before September 11, 2026.',
+      'Training sessions on 2-Sep: Digitalization & AI at ABB (10:00 AM - 12:00 PM), Application Development @ ABB (12:00 PM - 1:00 PM). 3-Sep: Innovation Using TRIZ Method (2:00 PM - 4:00 PM), IoT for Manufacturing (4:00 PM - 5:00 PM). Faculty members please arrive 15 mins prior for gate pass arrangements.',
     type: 'urgent',
     is_active: true,
     created_at: new Date().toISOString(),
@@ -83,17 +83,17 @@ export const DEFAULT_ACTION_PLANS: ActionPlan[] = [
     id: 'be83744c-f421-4e42-800c-58b445cfff05',
     step_number: 4,
     phase: 'Training & Support',
-    date_display: 'Aug 25 – 27, 2026',
-    target_date: '2026-08-27T18:00:00+05:30',
+    date_display: 'Sep 2 – 3, 2026',
+    target_date: '2026-09-03T17:00:00+05:30',
     timer_label: 'Training Workshops In',
     purpose:
-      'Focused workshops on tools, tech, and working methodologies. Runs simultaneously with Problem Discovery.',
+      'Focused workshops on tools, tech, and working methodologies. Faculty members are requested to arrive 15 minutes prior for gate pass arrangements.',
     is_current_timer: false,
     schedule_items: [
-      { day: 'Day 1', date: '25 Aug', title: 'Application Development in ABB', status: 'Core Workshop' },
-      { day: 'Day 2', date: '26 Aug', title: 'Digitalization & AI', status: 'Core Workshop' },
-      { day: 'Day 3', date: '27 Aug', time: '11:00 AM – 12:00 PM', title: 'IoT', status: 'Core Workshop' },
-      { day: 'Day 3', date: '27 Aug', time: '12:00 PM – 1:00 PM', title: 'Innovation using TRIZ methods', status: 'Core Workshop' },
+      { day: 'Day 1', date: '2 Sep', time: '10:00 AM – 12:00 PM', title: 'Digitalization & AI at ABB', status: 'Core Workshop' },
+      { day: 'Day 1', date: '2 Sep', time: '12:00 PM – 1:00 PM', title: 'Application Development @ ABB', status: 'Core Workshop' },
+      { day: 'Day 2', date: '3 Sep', time: '2:00 PM – 4:00 PM', title: 'Innovation Using TRIZ Method', status: 'Core Workshop' },
+      { day: 'Day 2', date: '3 Sep', time: '4:00 PM – 5:00 PM', title: 'IoT for Manufacturing', status: 'Core Workshop' },
     ],
   },
   {
